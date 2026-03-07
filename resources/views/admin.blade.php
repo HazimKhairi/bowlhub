@@ -120,7 +120,70 @@
         </div>
     </div>
 </div>
+
+<!-- Receipt Preview Modal -->
+<div class="modal" id="receiptModal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3>Resit Pembayaran</h3>
+            <button class="modal-close" id="closeReceiptModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="receiptPreview">
+                <!-- Image preview for JPG/PNG -->
+                <img id="receiptImage" src="" alt="Resit Pembayaran" style="display: none;">
+                <!-- PDF preview -->
+                <iframe id="receiptPdf" src="" style="display: none; width: 100%; height: 600px; border: none;"></iframe>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a id="receiptDownload" href="#" target="_blank" class="btn btn-secondary" download>
+                <i class="fas fa-download"></i> Muat Turun
+            </a>
+            <button type="button" class="btn btn-secondary" id="closeReceiptModalBtn">Tutup</button>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('styles')
+<style>
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.status-approved {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.modal-large {
+    max-width: 800px;
+}
+
+#receiptPreview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+#receiptImage {
+    max-width: 100%;
+    max-height: 600px;
+    object-fit: contain;
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -131,7 +194,8 @@
 const API_ENDPOINTS = {
     participants: '{{ route('admin.participants') }}',
     updateScore: (id) => `/admin/score/${id}`,
-    deleteParticipant: (id) => `/admin/participant/${id}` // Will be added to routes later
+    deleteParticipant: (id) => `/admin/participant/${id}`, // Will be added to routes later
+    approveParticipant: (id) => `/admin/participant/${id}/approve` // Will be added to routes later
 };
 
 // Initialize admin panel
@@ -205,6 +269,25 @@ function initAdminPanel() {
 
     // Export data
     document.getElementById('exportData').addEventListener('click', exportData);
+
+    // Receipt modal
+    const receiptModal = document.getElementById('receiptModal');
+    const closeReceiptModal = document.getElementById('closeReceiptModal');
+    const closeReceiptModalBtn = document.getElementById('closeReceiptModalBtn');
+
+    closeReceiptModal.addEventListener('click', () => {
+        receiptModal.classList.remove('active');
+    });
+
+    closeReceiptModalBtn.addEventListener('click', () => {
+        receiptModal.classList.remove('active');
+    });
+
+    receiptModal.addEventListener('click', (e) => {
+        if (e.target === receiptModal) {
+            receiptModal.classList.remove('active');
+        }
+    });
 }
 
 function updateEditScoreSummary() {
@@ -257,6 +340,11 @@ function renderAdminParticipantsList(participants) {
         const scoreStatusClass = participantHasScores ? 'score-badge' : 'score-badge score-empty';
         const scoreStatusText = participantHasScores ? `${p.score.total}` : 'Belum Ada Skor';
 
+        // Status badge
+        const statusBadge = p.status === 'approved'
+            ? '<span class="status-badge status-approved">Diluluskan</span>'
+            : '<span class="status-badge status-pending">Menunggu</span>';
+
         // Check if team event (beregu, trio, or berkumpulan) and build team members display
         const teamEventTypes = ['beregu', 'trio', 'berkumpulan'];
         const isTeamEvent = teamEventTypes.includes(p.event_type);
@@ -282,28 +370,68 @@ function renderAdminParticipantsList(participants) {
         // Generate event badge for team events
         const eventBadge = isTeamEvent ? `<span class="event-badge">${p.event_type.charAt(0).toUpperCase() + p.event_type.slice(1)}</span>` : '';
 
+        // Action buttons based on status
+        const actionButtons = p.status === 'pending' ? `
+            <button class="btn btn-sm btn-success" onclick="viewReceipt('${p.payment_receipt || ''}')"><i class="fas fa-receipt"></i> Lihat Resit</button>
+            <button class="btn btn-sm btn-primary" onclick="approveParticipant('${p.id}')"><i class="fas fa-check"></i> Lulus</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteParticipant('${p.id}')"><i class="fas fa-trash"></i> Padam</button>
+        ` : `
+            <button class="btn btn-sm btn-success" onclick="viewReceipt('${p.payment_receipt || ''}')"><i class="fas fa-receipt"></i> Lihat Resit</button>
+            <button class="btn btn-sm ${participantHasScores ? 'btn-secondary' : 'btn-primary'}" onclick="openScoreModal('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                <i class="fas fa-${participantHasScores ? 'edit' : 'plus'}"></i> ${participantHasScores ? 'Kemaskini' : 'Masukkan Skor'}
+            </button>
+            <button class="btn btn-sm btn-danger" ${participantHasScores ? 'disabled' : ''} onclick="deleteParticipant('${p.id}')"><i class="fas fa-trash"></i> Padam</button>
+        `;
+
         return `
         <div class="participant-card ${isTeamEvent ? 'team-card' : ''}">
             <div class="participant-info">
                 <h4>${p.name} ${eventBadge}</h4>
                 <p><strong>ID:</strong> ${p.id} ${isTeamEvent ? '' : `| <strong>IC:</strong> ${p.ic}`}</p>
+                <p><strong>Status:</strong> ${statusBadge}</p>
                 <p><strong>Pasukan:</strong> ${p.team} | <strong>Acara:</strong> ${p.event_type} (${p.gender})</p>
                 ${teamMembersHtml}
             </div>
             <div class="participant-scores">
-                <div class="scores">
-                    <span class="score-badge">G1: ${p.score ? p.score.g1 : 0}</span>
-                    <span class="score-badge">G2: ${p.score ? p.score.g2 : 0}</span>
-                    <span class="score-badge">G3: ${p.score ? p.score.g3 : 0}</span>
-                    <span class="score-badge">G4: ${p.score ? p.score.g4 : 0}</span>
-                    <span class="score-badge">G5: ${p.score ? p.score.g5 : 0}</span>
+                <div class="scores-container">
+                    <!-- Row 1: G1, G2, G3 -->
+                    <div class="scores-row">
+                        <div class="score-item">
+                            <span class="score-label">G1</span>
+                            <span class="score-value">${p.score ? p.score.g1 : 0}</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">G2</span>
+                            <span class="score-value">${p.score ? p.score.g2 : 0}</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">G3</span>
+                            <span class="score-value">${p.score ? p.score.g3 : 0}</span>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: G4, G5 -->
+                    <div class="scores-row scores-row-secondary">
+                        <div class="score-item">
+                            <span class="score-label">G4</span>
+                            <span class="score-value">${p.score ? p.score.g4 : 0}</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">G5</span>
+                            <span class="score-value">${p.score ? p.score.g5 : 0}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="total ${!participantHasScores ? 'text-muted' : ''}">Jumlah: ${scoreStatusText}</div>
+
+                <!-- Total Score Section -->
+                <div class="score-total ${!participantHasScores ? 'score-total-empty' : ''}">
+                    <div class="total-label">Jumlah</div>
+                    <div class="total-value">${scoreStatusText}</div>
+                    ${participantHasScores ? `<div class="total-avg">Purata: ${((p.score.total) / 5).toFixed(1)}</div>` : ''}
+                </div>
             </div>
             <div class="participant-actions">
-                <button class="btn btn-sm ${participantHasScores ? 'btn-secondary' : 'btn-primary'}" onclick="openScoreModal('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                    <i class="fas fa-${participantHasScores ? 'edit' : 'plus'}"></i> ${participantHasScores ? 'Kemaskini' : 'Masukkan Skor'}
-                </button>
+                ${actionButtons}
             </div>
         </div>
     `;
@@ -470,6 +598,30 @@ async function deleteParticipant(participantId) {
     }
 }
 
+async function approveParticipant(participantId) {
+    try {
+        const response = await fetch(`/admin/participant/${participantId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast(result.message, 'success');
+            loadParticipants();
+        } else {
+            showToast(result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error approving participant:', error);
+        showToast('Ralat meluluskan peserta', 'error');
+    }
+}
+
 async function exportData() {
     try {
         const response = await fetch(API_ENDPOINTS.participants);
@@ -490,6 +642,44 @@ async function exportData() {
     }
 }
 
+function viewReceipt(receiptPath) {
+    console.log('viewReceipt called with path:', receiptPath);
+
+    if (receiptPath) {
+        const modal = document.getElementById('receiptModal');
+        const img = document.getElementById('receiptImage');
+        const pdf = document.getElementById('receiptPdf');
+        const download = document.getElementById('receiptDownload');
+        const fileUrl = '/storage/' + receiptPath;
+
+        console.log('File URL:', fileUrl);
+
+        // Check file extension
+        const isPdf = receiptPath.toLowerCase().endsWith('.pdf');
+
+        if (isPdf) {
+            // Show PDF in iframe
+            img.style.display = 'none';
+            pdf.style.display = 'block';
+            pdf.src = fileUrl;
+        } else {
+            // Show image
+            pdf.style.display = 'none';
+            img.style.display = 'block';
+            img.src = fileUrl;
+        }
+
+        // Set download link
+        download.href = fileUrl;
+
+        console.log('Adding active class to modal');
+        modal.classList.add('active');
+    } else {
+        console.log('No receipt path provided');
+        showToast('Tiada resit dimuatnaik', 'error');
+    }
+}
+
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -501,5 +691,7 @@ function showToast(message, type = 'success') {
 
 // Make function global for onclick handlers
 window.openScoreModal = openScoreModal;
+window.viewReceipt = viewReceipt;
+window.approveParticipant = approveParticipant;
 </script>
 @endpush

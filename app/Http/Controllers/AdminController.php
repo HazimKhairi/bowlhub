@@ -116,4 +116,42 @@ class AdminController extends Controller
             'message' => 'Peserta berjaya dipadam.'
         ]);
     }
+
+    /**
+     * Approve a pending registration.
+     */
+    public function approveParticipant($id)
+    {
+        try {
+            $participant = Participant::findOrFail($id);
+
+            if ($participant->status === 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Peserta sudah diluluskan'
+                ]);
+            }
+
+            $participant->status = 'approved';
+            $participant->save();
+
+            \Log::info('Participant approved', ['participant_id' => $id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Peserta berjaya diluluskan'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error approving participant', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ralat meluluskan peserta'
+            ]);
+        }
+    }
 }

@@ -30,7 +30,7 @@
         </div>
     @endif
 
-    <form action="{{ route('registration.store') }}" method="POST" class="registration-form" id="registrationForm">
+    <form action="{{ route('registration.store') }}" method="POST" class="registration-form" id="registrationForm" enctype="multipart/form-data">
         @csrf
 
         <div class="form-section">
@@ -74,6 +74,13 @@
                     <option value="trio" {{ old('event_type') == 'trio' ? 'selected' : '' }}>Trio (3 orang)</option>
                     <option value="berkumpulan" {{ old('event_type') == 'berkumpulan' ? 'selected' : '' }}>Berkumpulan (6 orang)</option>
                 </select>
+            </div>
+
+            <div class="form-group">
+                <label for="paymentReceipt">Resit Pembayaran *</label>
+                <input type="file" id="paymentReceipt" name="payment_receipt"
+                       accept="image/*,.pdf" required>
+                <small class="form-hint">Format: JPG, PNG, PDF. Maksimum: 2MB</small>
             </div>
         </div>
 

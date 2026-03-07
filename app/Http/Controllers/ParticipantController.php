@@ -8,6 +8,7 @@ use App\Models\Score;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ParticipantController extends Controller
 {
@@ -35,6 +36,7 @@ class ParticipantController extends Controller
                 'team' => 'required|string|max:255',
                 'gender' => 'required|in:lelaki,wanita',
                 'event_type' => 'required|in:individu,beregu,trio,berkumpulan',
+                'payment_receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
                 'team_members' => 'sometimes|array',
                 'team_members.*.name' => 'sometimes|string|max:255',
                 'team_members.*.ic' => 'sometimes|string',
@@ -54,6 +56,15 @@ class ParticipantController extends Controller
             $participantId = (string) Str::uuid();
             \Log::info('Generated participant ID', ['id' => $participantId]);
 
+            // Handle payment receipt upload
+            $receiptPath = null;
+            if ($request->hasFile('payment_receipt')) {
+                $file = $request->file('payment_receipt');
+                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $receiptPath = $file->storeAs('receipts', $filename, 'public');
+                \Log::info('Receipt uploaded', ['path' => $receiptPath]);
+            }
+
             // Create participant
             $participant = Participant::create([
                 'id' => $participantId,
@@ -63,6 +74,8 @@ class ParticipantController extends Controller
                 'team' => $validated['team'],
                 'gender' => $validated['gender'],
                 'event_type' => $validated['event_type'],
+                'payment_receipt' => $receiptPath,
+                'status' => 'pending', // Default status for new registrations
             ]);
             \Log::info('Participant created', ['participant_id' => $participantId]);
 

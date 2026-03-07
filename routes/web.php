@@ -1,10 +1,16 @@
 <?php
 
+use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ParticipantController;
 use Illuminate\Support\Facades\Route;
+
+// Admin Authentication Routes
+Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
 // Home route
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -19,8 +25,11 @@ Route::get('/api/leaderboard/{eventType}/{gender}', [LeaderboardController::clas
 Route::get('/api/leaderboard/medal-standings', [LeaderboardController::class, 'getMedalStandings']);
 
 // Admin routes
-Route::get('/admin', [AdminController::class, 'index'])->name('admin');
-Route::get('/admin/participants', [AdminController::class, 'participants'])->name('admin.participants');
-Route::get('/admin/score/{id}', [AdminController::class, 'editScore'])->name('admin.score.edit');
-Route::post('/admin/score/{id}', [AdminController::class, 'updateScore'])->name('admin.score.update');
-Route::delete('/admin/participant/{id}', [AdminController::class, 'deleteParticipant'])->name('admin.participant.delete');
+Route::prefix('admin')->middleware('admin')->group(function () {
+    Route::get('/', [AdminController::class, 'index'])->name('admin');
+    Route::get('/participants', [AdminController::class, 'participants'])->name('admin.participants');
+    Route::get('/score/{id}', [AdminController::class, 'editScore'])->name('admin.score.edit');
+    Route::post('/score/{id}', [AdminController::class, 'updateScore'])->name('admin.score.update');
+    Route::delete('/participant/{id}', [AdminController::class, 'deleteParticipant'])->name('admin.participant.delete');
+    Route::post('/participant/{id}/approve', [AdminController::class, 'approveParticipant'])->name('admin.participant.approve');
+});

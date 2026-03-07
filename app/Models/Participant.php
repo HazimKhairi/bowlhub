@@ -24,6 +24,8 @@ class Participant extends Model
         'team',
         'gender',
         'event_type',
+        'status',
+        'payment_receipt',
     ];
 
     /**

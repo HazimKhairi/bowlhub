@@ -17,10 +17,21 @@
                 <span>Ukhuwah Strike Challenge</span>
             </div>
             <ul class="nav-menu">
-                <li><a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Utama</a></li>
-                <li><a href="{{ route('leaderboard') }}" class="nav-link {{ request()->routeIs('leaderboard') ? 'active' : '' }}">Kedudukan</a></li>
-                <li><a href="{{ route('registration') }}" class="nav-link {{ request()->routeIs('registration') ? 'active' : '' }}">Pendaftaran</a></li>
-                <li><a href="{{ route('admin') }}" class="nav-link {{ request()->routeIs('admin') ? 'active' : '' }}">Admin</a></li>
+                @if(session('admin_logged_in'))
+                    <li><a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Utama</a></li>
+                    <li><a href="{{ route('leaderboard') }}" class="nav-link {{ request()->routeIs('leaderboard') ? 'active' : '' }}">Kedudukan</a></li>
+                    <li><a href="{{ route('admin') }}" class="nav-link {{ request()->routeIs('admin') ? 'active' : '' }}">Admin</a></li>
+                    <li>
+                        <form id="logoutForm" method="POST" action="{{ route('admin.logout') }}">
+                            @csrf
+                        </form>
+                        <a href="#" onclick="document.getElementById('logoutForm').submit()" class="nav-link">Logout</a>
+                    </li>
+                @else
+                    <li><a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Utama</a></li>
+                    <li><a href="{{ route('leaderboard') }}" class="nav-link {{ request()->routeIs('leaderboard') ? 'active' : '' }}">Kedudukan</a></li>
+                    <li><a href="{{ route('registration') }}" class="nav-link {{ request()->routeIs('registration') ? 'active' : '' }}">Pendaftaran</a></li>
+                @endif
             </ul>
         </div>
     </nav>
