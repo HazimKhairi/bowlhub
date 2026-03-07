@@ -72,7 +72,7 @@
                     <option value="individu" {{ old('event_type') == 'individu' ? 'selected' : '' }}>Individu</option>
                     <option value="beregu" {{ old('event_type') == 'beregu' ? 'selected' : '' }}>Beregu (2 orang)</option>
                     <option value="trio" {{ old('event_type') == 'trio' ? 'selected' : '' }}>Trio (3 orang)</option>
-                    <option value="berkumpulan" {{ old('event_type') == 'berkumpulan' ? 'selected' : '' }}>Berkumpulan</option>
+                    <option value="berkumpulan" {{ old('event_type') == 'berkumpulan' ? 'selected' : '' }}>Berkumpulan (6 orang)</option>
                 </select>
             </div>
         </div>
@@ -119,8 +119,12 @@
             // Show 2 additional member fields
             teamMembersSection.style.display = 'block';
             addTeamMemberFields(2);
+        } else if (eventType === 'berkumpulan') {
+            // Show 5 additional member fields
+            teamMembersSection.style.display = 'block';
+            addTeamMemberFields(5);
         } else {
-            // Hide for individual and berkumpulan
+            // Hide for individual
             teamMembersSection.style.display = 'none';
         }
     });
@@ -158,7 +162,7 @@
             return;
         }
 
-        if (eventType === 'beregu' || eventType === 'trio') {
+        if (eventType === 'beregu' || eventType === 'trio' || eventType === 'berkumpulan') {
             const teamMemberFields = teamMembersContainer.querySelectorAll('input[type="text"]');
             let isValid = true;
 

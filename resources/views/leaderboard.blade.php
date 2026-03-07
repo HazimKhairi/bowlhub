@@ -325,12 +325,12 @@
             html += `<tr><td colspan="9"><div class="empty-state"><i class="fas fa-inbox"></i><p>Tiada data dipaparkan</p></div></td></tr>`;
         } else {
             participants.forEach(p => {
-                const member1 = p.teamMembers[0] ? p.teamMembers[0].name : '-';
-                const member2 = p.teamMembers[1] ? p.teamMembers[1].name : '-';
+                const member1 = p.name || '-';
+                const member2 = p.teamMembers && p.teamMembers[0] ? p.teamMembers[0].name : '-';
                 html += `
                     <tr>
-                        <td>${p.name}</td>
-                        <td>${member1 !== '-' ? member1 : member2}</td>
+                        <td>${member1}</td>
+                        <td>${member2}</td>
                         <td>${p.team}</td>
                         <td>${p.scores.g1}</td>
                         <td>${p.scores.g2}</td>
@@ -384,14 +384,14 @@
             html += `<tr><td colspan="10"><div class="empty-state"><i class="fas fa-inbox"></i><p>Tiada data dipaparkan</p></div></td></tr>`;
         } else {
             participants.forEach(p => {
-                const member1 = p.teamMembers[0] ? p.teamMembers[0].name : '-';
-                const member2 = p.teamMembers[1] ? p.teamMembers[1].name : '-';
-                const member3 = p.teamMembers[2] ? p.teamMembers[2].name : '-';
+                const member1 = p.name || '-';
+                const member2 = p.teamMembers && p.teamMembers[0] ? p.teamMembers[0].name : '-';
+                const member3 = p.teamMembers && p.teamMembers[1] ? p.teamMembers[1].name : '-';
                 html += `
                     <tr>
-                        <td>${p.name}</td>
                         <td>${member1}</td>
                         <td>${member2}</td>
+                        <td>${member3}</td>
                         <td>${p.team}</td>
                         <td>${p.scores.g1}</td>
                         <td>${p.scores.g2}</td>
@@ -427,7 +427,8 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Pasukan</th>
+                                <th style="width: 25%">Pasukan</th>
+                                <th style="width: 50%">Ahli Pasukan</th>
                                 <th>G1</th>
                                 <th>G2</th>
                                 <th>G3</th>
@@ -442,12 +443,18 @@
         `;
 
         if (participants.length === 0) {
-            html += `<tr><td colspan="9"><div class="empty-state"><i class="fas fa-inbox"></i><p>Tiada data dipaparkan</p></div></td></tr>`;
+            html += `<tr><td colspan="10"><div class="empty-state"><i class="fas fa-inbox"></i><p>Tiada data dipaparkan</p></div></td></tr>`;
         } else {
             participants.forEach(p => {
+                // Format team members list
+                const membersList = p.teamMembers && p.teamMembers.length > 0
+                    ? p.teamMembers.map(m => m.name).join(', ')
+                    : '-';
+
                 html += `
                     <tr>
-                        <td>${p.name}</td>
+                        <td><strong>${p.name}</strong></td>
+                        <td class="team-members-cell">${membersList}</td>
                         <td>${p.scores.g1}</td>
                         <td>${p.scores.g2}</td>
                         <td>${p.scores.g3}</td>
@@ -477,7 +484,8 @@
                         <thead>
                             <tr>
                                 <th>Kedudukan</th>
-                                <th>Pasukan</th>
+                                <th style="width: 40%">Pasukan</th>
+                                <th style="width: 40%">Ahli Pasukan</th>
                                 <th>Skor</th>
                             </tr>
                         </thead>
@@ -486,13 +494,19 @@
 
         const top5 = participants.slice(0, 5);
         if (top5.length === 0) {
-            html += `<tr><td colspan="3"><div class="empty-state"><i class="fas fa-inbox"></i><p>Tiada data dipaparkan</p></div></td></tr>`;
+            html += `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-inbox"></i><p>Tiada data dipaparkan</p></div></td></tr>`;
         } else {
             top5.forEach(p => {
+                // Format team members list
+                const membersList = p.teamMembers && p.teamMembers.length > 0
+                    ? p.teamMembers.map(m => m.name).join(', ')
+                    : '-';
+
                 html += `
                     <tr>
                         <td><span class="rank-badge ${getRankClass(p.rank)}">${getRankLabel(p.rank)}</span></td>
-                        <td>${p.name}</td>
+                        <td><strong>${p.name}</strong></td>
+                        <td class="team-members-cell">${membersList}</td>
                         <td><strong>${p.total}</strong></td>
                     </tr>
                 `;

@@ -33,7 +33,10 @@ class AdminController extends Controller
             $query->where('gender', $request->gender);
         }
 
-        $participants = $query->with('score')->get();
+        // Eager load score and team members (for berkumpulan events)
+        $participants = $query->with('score')->with(['teamMembers' => function ($query) {
+            $query->orderBy('member_order');
+        }])->get();
 
         return response()->json($participants);
     }
@@ -43,7 +46,11 @@ class AdminController extends Controller
      */
     public function editScore(string $participantId): View
     {
-        $participant = Participant::with('score')->findOrFail($participantId);
+        $participant = Participant::with('score')
+            ->with(['teamMembers' => function ($query) {
+                $query->orderBy('member_order');
+            }])
+            ->findOrFail($participantId);
 
         return view('admin.score-edit', compact('participant'));
     }

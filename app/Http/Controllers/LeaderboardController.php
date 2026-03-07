@@ -22,7 +22,9 @@ class LeaderboardController extends Controller
      */
     public function getEventResults(string $eventType, string $gender): JsonResponse
     {
-        $query = Participant::with('score')
+        $query = Participant::with(['score', 'teamMembers' => function ($query) {
+            $query->orderBy('member_order');
+        }])
             ->where('event_type', $eventType)
             ->where('gender', $gender)
             ->whereHas('score', function ($query) {

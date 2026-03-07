@@ -8,9 +8,26 @@
 
     <div class="participant-info" style="margin-bottom: 2rem;">
         <p><strong>ID:</strong> {{ $participant->id }}</p>
-        <p><strong>Nama:</strong> {{ $participant->name }}</p>
+        <p><strong>Nama:</strong> {{ $participant->name }} {{ $participant->event_type === 'berkumpulan' ? '<span class="event-badge">Berkumpulan</span>' : '' }}</p>
+        @if($participant->event_type !== 'berkumpulan')
+            <p><strong>No. KP:</strong> {{ $participant->ic }}</p>
+        @endif
         <p><strong>Pasukan:</strong> {{ $participant->team }}</p>
         <p><strong>Acara:</strong> {{ $participant->event_type }} ({{ $participant->gender }})</p>
+        @if($participant->event_type === 'berkumpulan' && $participant->teamMembers && $participant->teamMembers->count() > 0)
+            <div class="team-members-list">
+                <strong>Ahli Pasukan:</strong>
+                <ul class="team-members">
+                    @foreach($participant->teamMembers->sortBy('member_order') as $member)
+                        <li>
+                            <span class="member-order">{{ $member->member_order }}</span>
+                            <span class="member-name">{{ $member->name }}</span>
+                            <span class="member-ic">({{ $member->ic }})</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     </div>
 
     <form id="scoreEditForm" action="{{ route('admin.score.update', $participant->id) }}" method="POST">

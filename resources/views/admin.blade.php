@@ -257,12 +257,38 @@ function renderAdminParticipantsList(participants) {
         const scoreStatusClass = participantHasScores ? 'score-badge' : 'score-badge score-empty';
         const scoreStatusText = participantHasScores ? `${p.score.total}` : 'Belum Ada Skor';
 
+        // Check if team event (beregu, trio, or berkumpulan) and build team members display
+        const teamEventTypes = ['beregu', 'trio', 'berkumpulan'];
+        const isTeamEvent = teamEventTypes.includes(p.event_type);
+        let teamMembersHtml = '';
+
+        if (isTeamEvent && p.team_members && p.team_members.length > 0) {
+            teamMembersHtml = `
+                <div class="team-members-list">
+                    <strong>Ahli Pasukan:</strong>
+                    <ul class="team-members">
+                        ${p.team_members.map(member => `
+                            <li>
+                                <span class="member-order">${member.member_order}</span>
+                                <span class="member-name">${member.name}</span>
+                                <span class="member-ic">(${member.ic})</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Generate event badge for team events
+        const eventBadge = isTeamEvent ? `<span class="event-badge">${p.event_type.charAt(0).toUpperCase() + p.event_type.slice(1)}</span>` : '';
+
         return `
-        <div class="participant-card">
+        <div class="participant-card ${isTeamEvent ? 'team-card' : ''}">
             <div class="participant-info">
-                <h4>${p.name}</h4>
-                <p><strong>ID:</strong> ${p.id} | <strong>IC:</strong> ${p.ic}</p>
+                <h4>${p.name} ${eventBadge}</h4>
+                <p><strong>ID:</strong> ${p.id} ${isTeamEvent ? '' : `| <strong>IC:</strong> ${p.ic}`}</p>
                 <p><strong>Pasukan:</strong> ${p.team} | <strong>Acara:</strong> ${p.event_type} (${p.gender})</p>
+                ${teamMembersHtml}
             </div>
             <div class="participant-scores">
                 <div class="scores">
@@ -303,11 +329,18 @@ function renderAllParticipantsTable(participants) {
 
         const scoreDisplay = participantHasScores ? `<strong>${p.score.total}</strong>` : '<span class="text-muted">-</span>';
 
+        // For team events (beregu, trio, berkumpulan), show team name instead of captain's name
+        const teamEventTypes = ['beregu', 'trio', 'berkumpulan'];
+        const isTeamEvent = teamEventTypes.includes(p.event_type);
+        const eventBadge = isTeamEvent ? `<span class="event-badge-small">${p.event_type.charAt(0).toUpperCase() + p.event_type.slice(1)}</span>` : '';
+        const displayName = isTeamEvent ? `<strong>${p.name}</strong> ${eventBadge}` : p.name;
+        const displayIc = isTeamEvent ? `<span class="text-muted">-</span>` : p.ic;
+
         return `
         <tr>
             <td>${p.id}</td>
-            <td>${p.name}</td>
-            <td>${p.ic}</td>
+            <td>${displayName}</td>
+            <td>${displayIc}</td>
             <td>${p.team}</td>
             <td>${p.gender}</td>
             <td>${p.event_type}</td>
@@ -325,12 +358,39 @@ function renderAllParticipantsTable(participants) {
 function openScoreModal(participantId, participant) {
     const modal = document.getElementById('scoreModal');
 
+    // Check if team event (beregu, trio, or berkumpulan) and build team members display
+    const teamEventTypes = ['beregu', 'trio', 'berkumpulan'];
+    const isTeamEvent = teamEventTypes.includes(participant.event_type);
+    let teamMembersHtml = '';
+
+    if (isTeamEvent && participant.team_members && participant.team_members.length > 0) {
+        teamMembersHtml = `
+            <div class="team-members-list">
+                <strong>Ahli Pasukan:</strong>
+                <ul class="team-members">
+                    ${participant.team_members.map(member => `
+                        <li>
+                            <span class="member-order">${member.member_order}</span>
+                            <span class="member-name">${member.name}</span>
+                            <span class="member-ic">(${member.ic})</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    // Generate event badge for team events
+    const eventBadge = isTeamEvent ? `<span class="event-badge">${participant.event_type.charAt(0).toUpperCase() + participant.event_type.slice(1)}</span>` : '';
+
     // Show participant info
     document.getElementById('modalParticipantInfo').innerHTML = `
         <p><strong>ID:</strong> ${participant.id}</p>
-        <p><strong>Nama:</strong> ${participant.name}</p>
+        <p><strong>Nama:</strong> ${participant.name} ${eventBadge}</p>
+        ${!isTeamEvent ? `<p><strong>No. KP:</strong> ${participant.ic}</p>` : ''}
         <p><strong>Pasukan:</strong> ${participant.team}</p>
         <p><strong>Acara:</strong> ${participant.event_type} (${participant.gender})</p>
+        ${teamMembersHtml}
     `;
 
     // Set current scores

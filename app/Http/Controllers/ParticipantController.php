@@ -79,8 +79,8 @@ class ParticipantController extends Controller
             ]);
             \Log::info('Score initialized', ['score_id' => $score->id]);
 
-            // Save team members if event type requires it (beregu/trio)
-            if (in_array($validated['event_type'], ['beregu', 'trio']) && isset($validated['team_members'])) {
+            // Save team members if event type requires it (beregu/trio/berkumpulan)
+            if (in_array($validated['event_type'], ['beregu', 'trio', 'berkumpulan']) && isset($validated['team_members'])) {
                 $memberOrder = 1;
                 foreach ($validated['team_members'] as $member) {
                     TeamMember::create([
