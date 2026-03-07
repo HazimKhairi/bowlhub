@@ -1,0 +1,71 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class Participant extends Model
+{
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'ic',
+        'phone',
+        'team',
+        'gender',
+        'event_type',
+    ];
+
+    /**
+     * Indicates if the model's ID is auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The data type of the primary key.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
+
+    /**
+     * Get the team members for the participant.
+     *
+     * @return HasMany
+     */
+    public function teamMembers(): HasMany
+    {
+        return $this->hasMany(TeamMember::class);
+    }
+
+    /**
+     * Get the score for the participant.
+     *
+     * @return HasOne
+     */
+    public function score(): HasOne
+    {
+        return $this->hasOne(Score::class);
+    }
+
+    /**
+     * Get the participant's full name.
+     *
+     * @return string
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->name;
+    }
+}
