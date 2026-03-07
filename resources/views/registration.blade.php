@@ -146,16 +146,28 @@
 
     // Form submission handling
     document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        console.log('Form submitted');
         const eventType = document.getElementById('regEventType').value;
+        console.log('Event type:', eventType);
+
+        // Check if event type is selected
+        if (!eventType) {
+            e.preventDefault();
+            alert('Sila pilih jenis acara');
+            document.getElementById('regEventType').focus();
+            return;
+        }
 
         if (eventType === 'beregu' || eventType === 'trio') {
             const teamMemberFields = teamMembersContainer.querySelectorAll('input[type="text"]');
             let isValid = true;
 
+            console.log('Checking team members, count:', teamMemberFields.length);
             teamMemberFields.forEach(field => {
                 if (!field.value.trim()) {
                     isValid = false;
                     field.style.borderColor = 'red';
+                    console.log('Invalid field:', field.id);
                 } else {
                     field.style.borderColor = '';
                 }
@@ -163,10 +175,13 @@
 
             if (!isValid) {
                 e.preventDefault();
-                // Show error message
                 alert('Sila isi semua maklumat ahli pasukan');
+                return;
             }
         }
+
+        console.log('Form validation passed, allowing submission');
+        // Don't prevent default - let the form submit normally
     });
 
     // Reset button handler

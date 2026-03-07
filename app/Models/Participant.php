@@ -17,6 +17,7 @@ class Participant extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'id',
         'name',
         'ic',
         'phone',

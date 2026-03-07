@@ -24,18 +24,27 @@ class ParticipantController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('Registration attempt started', $request->all());
+
         // Validate the request
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'ic' => 'required|string|unique:participants,ic',
-            'phone' => 'required|string|max:20',
-            'team' => 'required|string|max:255',
-            'gender' => 'required|in:lelaki,wanita',
-            'event_type' => 'required|in:individu,beregu,trio,berkumpulan',
-            'team_members' => 'array',
-            'team_members.*.name' => 'required|string|max:255',
-            'team_members.*.ic' => 'required|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'ic' => 'required|string|unique:participants,ic',
+                'phone' => 'required|string|max:20',
+                'team' => 'required|string|max:255',
+                'gender' => 'required|in:lelaki,wanita',
+                'event_type' => 'required|in:individu,beregu,trio,berkumpulan',
+                'team_members' => 'sometimes|array',
+                'team_members.*.name' => 'sometimes|string|max:255',
+                'team_members.*.ic' => 'sometimes|string',
+            ]);
+
+            \Log::info('Validation passed', $validated);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', ['errors' => $e->errors()]);
+            throw $e;
+        }
 
         // Use database transaction for data integrity
         DB::beginTransaction();
@@ -43,6 +52,7 @@ class ParticipantController extends Controller
         try {
             // Generate unique ID for participant
             $participantId = (string) Str::uuid();
+            \Log::info('Generated participant ID', ['id' => $participantId]);
 
             // Create participant
             $participant = Participant::create([
@@ -54,9 +64,10 @@ class ParticipantController extends Controller
                 'gender' => $validated['gender'],
                 'event_type' => $validated['event_type'],
             ]);
+            \Log::info('Participant created', ['participant_id' => $participantId]);
 
             // Initialize empty scores for new participant
-            Score::create([
+            $score = Score::create([
                 'participant_id' => $participantId,
                 'g1' => 0,
                 'g2' => 0,
@@ -66,6 +77,7 @@ class ParticipantController extends Controller
                 'total' => 0,
                 'average' => 0,
             ]);
+            \Log::info('Score initialized', ['score_id' => $score->id]);
 
             // Save team members if event type requires it (beregu/trio)
             if (in_array($validated['event_type'], ['beregu', 'trio']) && isset($validated['team_members'])) {
@@ -78,9 +90,11 @@ class ParticipantController extends Controller
                         'member_order' => $memberOrder++,
                     ]);
                 }
+                \Log::info('Team members saved', ['count' => count($validated['team_members'])]);
             }
 
             DB::commit();
+            \Log::info('Transaction committed successfully');
 
             return redirect()
                 ->route('registration')
@@ -88,6 +102,10 @@ class ParticipantController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Registration failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return redirect()
                 ->route('registration')

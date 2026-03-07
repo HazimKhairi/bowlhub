@@ -765,115 +765,8 @@ function renderMedalStandings() {
 // ========================================
 // REGISTRATION FORM
 // ========================================
-
-function initRegistrationForm() {
-    const form = document.getElementById('registrationForm');
-    const eventTypeSelect = document.getElementById('regEventType');
-    const teamMembersSection = document.getElementById('teamMembersSection');
-    const teamMembersContainer = document.getElementById('teamMembersContainer');
-
-    // Check if registration form elements exist on this page
-    if (!form || !eventTypeSelect || !teamMembersSection || !teamMembersContainer) {
-        return; // Exit if we're not on the registration page
-    }
-
-    // Handle event type change
-    eventTypeSelect.addEventListener('change', () => {
-        const eventType = eventTypeSelect.value;
-        teamMembersContainer.innerHTML = '';
-
-        if (eventType === 'beregu') {
-            teamMembersSection.style.display = 'block';
-            teamMembersContainer.innerHTML = `
-                <div class="form-group">
-                    <label>Nama Peserta 2</label>
-                    <input type="text" id="member2Name" required>
-                </div>
-                <div class="form-group">
-                    <label>No. KP Peserta 2</label>
-                    <input type="text" id="member2IC" required>
-                </div>
-            `;
-        } else if (eventType === 'trio') {
-            teamMembersSection.style.display = 'block';
-            teamMembersContainer.innerHTML = `
-                <div class="form-group">
-                    <label>Nama Peserta 2</label>
-                    <input type="text" id="member2Name" required>
-                </div>
-                <div class="form-group">
-                    <label>No. KP Peserta 2</label>
-                    <input type="text" id="member2IC" required>
-                </div>
-                <div class="form-group">
-                    <label>Nama Peserta 3</label>
-                    <input type="text" id="member3Name" required>
-                </div>
-                <div class="form-group">
-                    <label>No. KP Peserta 3</label>
-                    <input type="text" id="member3IC" required>
-                </div>
-            `;
-        } else {
-            teamMembersSection.style.display = 'none';
-        }
-    });
-
-    // Form submission - Participants register ONLY, no scores
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        // Initialize empty scores for admin to fill later
-        const emptyScores = { g1: 0, g2: 0, g3: 0, g4: 0, g5: 0 };
-
-        const participant = {
-            id: generateId(),
-            name: document.getElementById('regName').value,
-            ic: document.getElementById('regIC').value,
-            phone: document.getElementById('regPhone').value,
-            team: document.getElementById('regTeam').value,
-            gender: document.getElementById('regGender').value,
-            eventType: document.getElementById('regEventType').value,
-            scores: emptyScores,
-            total: 0,
-            average: 0,
-            createdAt: new Date().toISOString()
-        };
-
-        // Add team members if applicable
-        const eventType = participant.eventType;
-        if (eventType === 'beregu') {
-            participant.teamMembers = [
-                { name: participant.name, ic: participant.ic },
-                {
-                    name: document.getElementById('member2Name').value,
-                    ic: document.getElementById('member2IC').value
-                }
-            ];
-        } else if (eventType === 'trio') {
-            participant.teamMembers = [
-                { name: participant.name, ic: participant.ic },
-                {
-                    name: document.getElementById('member2Name').value,
-                    ic: document.getElementById('member2IC').value
-                },
-                {
-                    name: document.getElementById('member3Name').value,
-                    ic: document.getElementById('member3IC').value
-                }
-            ];
-        }
-
-        saveParticipant(participant);
-        showToast('Pendaftaran berjaya! Admin akan memasukkan skor anda kemudian.');
-        form.reset();
-        teamMembersSection.style.display = 'none';
-    });
-
-    form.addEventListener('reset', () => {
-        teamMembersSection.style.display = 'none';
-    });
-}
+// Registration form handling is now managed by Laravel backend
+// See registration.blade.php for form validation and submission logic
 
 // ========================================
 // ADMIN PANEL
@@ -1120,8 +1013,8 @@ window.openScoreModal = openScoreModal;
 document.addEventListener('DOMContentLoaded', () => {
     initializeData();
     // Navigation handled by Laravel routes
+    // Registration form handled by Laravel (see registration.blade.php)
     initLeaderboardTabs();
-    initRegistrationForm();
     initAdminPanel();
     renderLeaderboard();
 });
