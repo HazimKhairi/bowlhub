@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -v 2>/dev/null || echo \"PHP not found\")",
+      "WebSearch",
+      "Bash(php artisan route:list --columns=uri,method,name)",
+      "Bash(php artisan route:list)"
+    ]
+  }
+}
