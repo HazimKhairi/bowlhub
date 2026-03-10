@@ -4,7 +4,13 @@
       "Bash(php -v 2>/dev/null || echo \"PHP not found\")",
       "WebSearch",
       "Bash(php artisan route:list --columns=uri,method,name)",
-      "Bash(php artisan route:list)"
+      "Bash(php artisan route:list)",
+      "Bash(find /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/ -name \"server.php\" -o -name \"*.conf\" -o -name \"apache*\" -o -name \"nginx*\" 2>/dev/null | head -10)",
+      "Bash(chmod +x /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/deploy-to-hostinger.sh)",
+      "Bash(ls -la /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/*.md)",
+      "Bash(find /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/public/css -name \"*.css\" 2>/dev/null | head -5)",
+      "Bash(find /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/public/js -name \"*.js\" 2>/dev/null | head -5)",
+      "Bash(chmod +x /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/deploy-intelligent.sh)"
     ]
   }
 }
