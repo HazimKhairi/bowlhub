@@ -6,6 +6,22 @@
 <section id="leaderboard" class="section active">
     <h2 class="section-title">Papan Kedudukan</h2>
 
+    <!-- Rank Legend -->
+    <div class="rank-legend">
+        <div class="legend-item">
+            <span class="rank-badge rank-1"></span>
+            <span class="legend-label">Johan</span>
+        </div>
+        <div class="legend-item">
+            <span class="rank-badge rank-2"></span>
+            <span class="legend-label">Naib Johan</span>
+        </div>
+        <div class="legend-item">
+            <span class="rank-badge rank-3"></span>
+            <span class="legend-label">Ketiga</span>
+        </div>
+    </div>
+
     <!-- Event Tabs -->
     <div class="event-tabs">
         <button class="tab-btn active" data-event="individu">Individu</button>
@@ -576,12 +592,8 @@
 
     // Helper functions
     function getRankLabel(rank) {
-        const labels = {
-            1: 'JOHAN',
-            2: 'NAIB JOHAN',
-            3: 'KETIGA'
-        };
-        return labels[rank] || `KE-${rank}`;
+        // Return empty string for table badges (legend shows the labels)
+        return '';
     }
 
     function getRankClass(rank) {
