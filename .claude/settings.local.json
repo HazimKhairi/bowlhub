@@ -14,7 +14,24 @@
       "Bash(php --version)",
       "Bash(php artisan:*)",
       "Bash(find /Users/radhifauzan/Desktop/side-projects/bowling-system-backend -name \".env*\" -type f 2>/dev/null | head -10)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(composer require:*)",
+      "Bash(php storage/app/public/templates/create_templates.php)",
+      "Bash(vendor/bin/pint --test)",
+      "Bash(vendor/bin/pint)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(php /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/storage/regen_templates.php)",
+      "Bash(find /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/vendor/maatwebsite/excel/src -name \"*.php\" -type f -exec grep -l \"WithValidation\" {} \\\\; | head -5)",
+      "Bash(php -r \"\n\\\\$value = '9.501E+11';\necho \\\\\"Value type: \\\\\" . gettype\\(\\\\$value\\) . PHP_EOL;\necho \\\\\"Value: \\\\$value\\\\\" . PHP_EOL;\necho \\\\\"Is string: \\\\\" . \\(is_string\\(\\\\$value\\) ? 'yes' : 'no'\\) . PHP_EOL;\necho \\\\\"Is numeric: \\\\\" . \\(is_numeric\\(\\\\$value\\) ? 'yes' : 'no'\\) . PHP_EOL;\necho \\\\\"String cast: \\\\\" . \\(string\\)\\\\$value . PHP_EOL;\necho \\\\\"Numeric cast: \\\\\" . \\(float\\)\\\\$value . PHP_EOL;\n\")",
+      "Bash(php -r \"\n\\\\$value = '9.501E+11';\nif \\(preg_match\\('/^\\(\\\\d+\\)\\\\.\\(\\\\d+\\)E\\\\+\\(\\\\d+\\)$/', \\\\$value, \\\\$matches\\)\\) {\n    echo \\\\\"Pattern matched!\\\\\" . PHP_EOL;\n    echo \\\\\"Base: \\\\$matches[1]\\\\$matches[2]\\\\\" . PHP_EOL;\n    echo \\\\\"Exponent: \\\\$matches[3]\\\\\" . PHP_EOL;\n    \\\\$base = \\\\$matches[1].\\\\$matches[2];\n    \\\\$exponent = \\(int\\)\\\\$matches[3];\n    echo \\\\\"Padded: \\\\\" . str_pad\\(\\\\$base, \\\\$exponent + 1, '0'\\) . PHP_EOL;\n} else {\n    echo \\\\\"Pattern did not match\\\\\" . PHP_EOL;\n}\n\")",
+      "Bash(php storage/create_template.php)",
+      "Bash(php -r \"\n\\\\$file = 'storage/app/public/templates/individual.xlsx';\necho 'File mod time: ' . filemtime\\(\\\\$file\\) . PHP_EOL;\n\\\\$xlsx = new \\\\PhpOffice\\\\PhpSpreadsheet\\\\IOFactory::load\\(\\\\$file\\);\n\\\\$sheet = \\\\$xlsx->getActiveSheet\\(\\);\necho 'Cell A1 format: ' . \\\\$sheet->getCell\\('A1'\\)->getStyle\\(\\)->getNumberFormat\\(\\)->getFormatCode\\(\\) . PHP_EOL;\nunlink\\(\\\\$file\\);\n\")",
+      "Bash(php -r \"\n\\\\$xlsx = new PhpOffice\\\\PhpSpreadsheet\\\\IOFactory::load\\('storage/app/public/templates/individual.xlsx'\\);\necho 'Cell A1 format: ' . \\\\$xlsx->getActiveSheet\\(\\)->getCell\\('A1'\\)->getStyle\\(\\)->getNumberFormat\\(\\)->getFormatCode\\(\\) . PHP_EOL;\n\")",
+      "Bash(php test_template.php)",
+      "Bash(php -r \"\n\\\\$reader = new PhpOffice\\\\PhpSpreadsheet\\\\IOFactory::load\\('storage/app/public/templates/individual.xlsx'\\);\necho 'Headers: ' . implode\\(', ', \\\\$reader->getActiveSheet\\(\\)->rangeToArray\\('A1:A1', null, true, false, false\\)[0]\\) . PHP_EOL;\necho 'Total rows: ' . count\\(\\\\$reader->getActiveSheet\\(\\)->toArray\\(\\)\\) . PHP_EOL;\n\")",
+      "Bash(unzip -l /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/storage/app/public/templates/individual.xlsx 2>/dev/null | head -20)",
+      "Bash(unzip -p /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/storage/app/public/templates/individual.xlsx xl/worksheets/sheet1.xml 2>/dev/null | head -50)"
     ]
   }
 }

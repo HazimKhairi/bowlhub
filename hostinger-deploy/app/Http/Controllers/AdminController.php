@@ -74,8 +74,8 @@ class AdminController extends Controller
         // Find or create score record
         $score = Score::where('participant_id', $participantId)->first();
 
-        if (!$score) {
-            $score = new Score();
+        if (! $score) {
+            $score = new Score;
             $score->participant_id = $participantId;
         }
 
@@ -92,7 +92,7 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Skor berjaya disimpan!',
-            'score' => $score->load('participant')
+            'score' => $score->load('participant'),
         ]);
     }
 
@@ -113,7 +113,7 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Peserta berjaya dipadam.'
+            'message' => 'Peserta berjaya dipadam.',
         ]);
     }
 
@@ -128,7 +128,7 @@ class AdminController extends Controller
             if ($participant->status === 'approved') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Peserta sudah diluluskan'
+                    'message' => 'Peserta sudah diluluskan',
                 ]);
             }
 
@@ -139,18 +139,18 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Peserta berjaya diluluskan'
+                'message' => 'Peserta berjaya diluluskan',
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Error approving participant', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ralat meluluskan peserta'
+                'message' => 'Ralat meluluskan peserta',
             ]);
         }
     }

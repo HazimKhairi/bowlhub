@@ -44,8 +44,6 @@ class Participant extends Model
 
     /**
      * Get the team members for the participant.
-     *
-     * @return HasMany
      */
     public function teamMembers(): HasMany
     {
@@ -54,8 +52,6 @@ class Participant extends Model
 
     /**
      * Get the score for the participant.
-     *
-     * @return HasOne
      */
     public function score(): HasOne
     {
@@ -64,8 +60,6 @@ class Participant extends Model
 
     /**
      * Get the participant's full name.
-     *
-     * @return string
      */
     public function getFullNameAttribute(): string
     {

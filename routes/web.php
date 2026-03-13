@@ -32,4 +32,6 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::post('/score/{id}', [AdminController::class, 'updateScore'])->name('admin.score.update');
     Route::delete('/participant/{id}', [AdminController::class, 'deleteParticipant'])->name('admin.participant.delete');
     Route::post('/participant/{id}/approve', [AdminController::class, 'approveParticipant'])->name('admin.participant.approve');
+    Route::get('/template/{type}', [AdminController::class, 'downloadTemplate'])->name('admin.template.download');
+    Route::post('/import', [AdminController::class, 'importExcel'])->name('admin.import');
 });

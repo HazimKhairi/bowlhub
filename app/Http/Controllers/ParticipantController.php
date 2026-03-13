@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Participant;
-use App\Models\TeamMember;
 use App\Models\Score;
+use App\Models\TeamMember;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ParticipantController extends Controller
 {
@@ -60,7 +60,7 @@ class ParticipantController extends Controller
             $receiptPath = null;
             if ($request->hasFile('payment_receipt')) {
                 $file = $request->file('payment_receipt');
-                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
                 $receiptPath = $file->storeAs('receipts', $filename, 'public');
                 \Log::info('Receipt uploaded', ['path' => $receiptPath]);
             }
@@ -117,7 +117,7 @@ class ParticipantController extends Controller
             DB::rollBack();
             \Log::error('Registration failed', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return redirect()

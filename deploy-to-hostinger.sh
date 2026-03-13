@@ -190,6 +190,7 @@ echo -e "${YELLOW}[5/8] Setting up storage structure for Hostinger...${NC}"
 if [ -d "$DEPLOY_DIR/storage" ]; then
     # Keep the storage directory but ensure proper structure
     mkdir -p "$DEPLOY_DIR/storage/app/public/receipts"
+    mkdir -p "$DEPLOY_DIR/storage/app/public/templates"
     mkdir -p "$DEPLOY_DIR/storage/framework/cache"
     mkdir -p "$DEPLOY_DIR/storage/framework/sessions"
     mkdir -p "$DEPLOY_DIR/storage/framework/views"

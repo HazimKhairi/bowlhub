@@ -20,6 +20,9 @@
         <div class="admin-header">
             <h3>Urus Skor Peserta</h3>
             <div class="admin-filters">
+                <button class="btn btn-sm btn-primary" id="showImportModal">
+                    <i class="fas fa-file-excel"></i> Import Excel
+                </button>
                 <select id="adminEventTypeFilter">
                     <option value="">Semua Acara</option>
                     <option value="individu">Individu</option>
@@ -144,6 +147,56 @@
         </div>
     </div>
 </div>
+
+<!-- Import Excel Modal -->
+<div class="modal" id="importModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Import Data Peserta</h3>
+            <button class="modal-close" id="closeImportModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="template-buttons">
+                <a href="/admin/template/individual" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-download"></i> Muat Turun Template Individu
+                </a>
+                <a href="/admin/template/team-beregu" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-download"></i> Muat Turun Template Beregu
+                </a>
+                <a href="/admin/template/team-trio" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-download"></i> Muat Turun Template Trio
+                </a>
+                <a href="/admin/template/team-berkumpulan" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-download"></i> Muat Turun Template Berkumpulan
+                </a>
+            </div>
+            <form id="importForm">
+                @csrf
+                <div class="form-group">
+                    <label for="importFile">Pilih Fail Excel</label>
+                    <input type="file" id="importFile" name="file" accept=".xlsx,.xls" required>
+                </div>
+                <div class="form-group">
+                    <label for="importType">Jenis Import</label>
+                    <select id="importType" name="type" required>
+                        <option value="">-- Pilih Jenis --</option>
+                        <option value="individual">Individu</option>
+                        <option value="team-beregu">Beregu</option>
+                        <option value="team-trio">Trio</option>
+                        <option value="team-berkumpulan">Berkumpulan</option>
+                    </select>
+                </div>
+                <div id="importErrors" class="error-messages"></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelImport">Batal</button>
+            <button type="submit" class="btn btn-primary" id="submitImport">
+                <i class="fas fa-upload"></i> Import
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -182,6 +235,51 @@
     max-height: 600px;
     object-fit: contain;
 }
+
+.template-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.template-buttons .btn {
+    width: 100%;
+    text-align: left;
+    color: var(--text-dark);
+}
+
+.template-buttons .btn:hover {
+    color: var(--text-dark);
+}
+
+.error-messages {
+    margin-top: 1rem;
+}
+
+.error-message {
+    padding: 0.75rem;
+    background-color: #f8d7da;
+    color: #721c24;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+}
+
+.modal-footer .btn-secondary {
+    background-color: var(--text-light);
+    color: white;
+}
+
+.modal-footer .btn-secondary:hover {
+    background-color: var(--text-dark);
+}
 </style>
 @endpush
 
@@ -195,7 +293,8 @@ const API_ENDPOINTS = {
     participants: '{{ route('admin.participants') }}',
     updateScore: (id) => `/admin/score/${id}`,
     deleteParticipant: (id) => `/admin/participant/${id}`, // Will be added to routes later
-    approveParticipant: (id) => `/admin/participant/${id}/approve` // Will be added to routes later
+    approveParticipant: (id) => `/admin/participant/${id}/approve`, // Will be added to routes later
+    import: '/admin/import'
 };
 
 // Initialize admin panel
@@ -286,6 +385,75 @@ function initAdminPanel() {
     receiptModal.addEventListener('click', (e) => {
         if (e.target === receiptModal) {
             receiptModal.classList.remove('active');
+        }
+    });
+
+    // Import modal
+    const importModal = document.getElementById('importModal');
+    const showImportModal = document.getElementById('showImportModal');
+    const closeImportModal = document.getElementById('closeImportModal');
+    const cancelImport = document.getElementById('cancelImport');
+    const submitImport = document.getElementById('submitImport');
+
+    showImportModal.addEventListener('click', () => {
+        importModal.classList.add('active');
+    });
+
+    closeImportModal.addEventListener('click', () => {
+        importModal.classList.remove('active');
+    });
+
+    cancelImport.addEventListener('click', () => {
+        importModal.classList.remove('active');
+    });
+
+    importModal.addEventListener('click', (e) => {
+        if (e.target === importModal) {
+            importModal.classList.remove('active');
+        }
+    });
+
+    submitImport.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const file = document.getElementById('importFile').files[0];
+        const type = document.getElementById('importType').value;
+
+        if (!file || !type) {
+            alert('Sila pilih fail dan jenis import');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', type);
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+        try {
+            const response = await fetch(API_ENDPOINTS.import, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message);
+                importModal.classList.remove('active');
+                document.getElementById('importForm').reset();
+                document.getElementById('importErrors').innerHTML = '';
+                loadParticipants(); // Reload participant list
+            } else {
+                let errorsHtml = '';
+                if (result.errors && Array.isArray(result.errors)) {
+                    errorsHtml = result.errors.map(error => `<div class="error-message">${error}</div>`).join('');
+                } else {
+                    errorsHtml = `<div class="error-message">${result.message}</div>`;
+                }
+                document.getElementById('importErrors').innerHTML = errorsHtml;
+            }
+        } catch (error) {
+            alert('Ralat berlaku semasa import');
         }
     });
 }

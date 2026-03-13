@@ -46,8 +46,6 @@ class Score extends Model
 
     /**
      * The "booted" method of the model.
-     *
-     * @return void
      */
     protected static function booted(): void
     {
@@ -62,8 +60,6 @@ class Score extends Model
 
     /**
      * Get the participant that owns the score.
-     *
-     * @return BelongsTo
      */
     public function participant(): BelongsTo
     {

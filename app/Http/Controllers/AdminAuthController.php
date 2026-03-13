@@ -25,6 +25,7 @@ class AdminAuthController extends Controller
 
         if ($password === $expectedPassword) {
             session(['admin_logged_in' => true]);
+
             return redirect()->route('admin')->with('success', 'Login berjaya');
 
         }
@@ -38,6 +39,7 @@ class AdminAuthController extends Controller
     public function logout(Request $request)
     {
         $request->session()->forget('admin_logged_in');
+
         return redirect()->route('home')->with('success', 'Logout berjaya');
     }
 }

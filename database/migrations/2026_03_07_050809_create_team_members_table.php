@@ -21,9 +21,9 @@ return new class extends Migration
 
             $table->index('participant_id');
             $table->foreign('participant_id')
-                  ->references('id')
-                  ->on('participants')
-                  ->onDelete('cascade');
+                ->references('id')
+                ->on('participants')
+                ->onDelete('cascade');
         });
     }
 

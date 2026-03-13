@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Participant;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class FixParticipantStatusSeeder extends Seeder
 {
@@ -56,7 +55,7 @@ class FixParticipantStatusSeeder extends Seeder
         $this->command->info('Summary:');
         $this->command->info("  Approved: {$approvedCount} participants");
         $this->command->info("  Pending: {$pendingCount} participants");
-        $this->command->info("  Total: " . ($approvedCount + $pendingCount) . " participants");
+        $this->command->info('  Total: '.($approvedCount + $pendingCount).' participants');
         $this->command->info('');
         $this->command->info('Participant status fixing completed!');
     }

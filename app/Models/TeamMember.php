@@ -24,8 +24,6 @@ class TeamMember extends Model
 
     /**
      * Get the participant that owns the team member.
-     *
-     * @return BelongsTo
      */
     public function participant(): BelongsTo
     {

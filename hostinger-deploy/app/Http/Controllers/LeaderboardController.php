@@ -42,6 +42,7 @@ class LeaderboardController extends Controller
         // Add rank to each participant
         $ranked = $ranked->map(function ($participant, $index) {
             $participant->rank = $index + 1;
+
             return $participant;
         });
 
@@ -105,7 +106,7 @@ class LeaderboardController extends Controller
                 foreach ($participants as $index => $participant) {
                     $team = $participant->team;
 
-                    if (!isset($medalCounts[$team])) {
+                    if (! isset($medalCounts[$team])) {
                         $medalCounts[$team] = [
                             'emas' => 0,
                             'perak' => 0,
@@ -138,6 +139,7 @@ class LeaderboardController extends Controller
             if ($b['perak'] !== $a['perak']) {
                 return $b['perak'] - $a['perak'];
             }
+
             return $b['gangsa'] - $a['gangsa'];
         });
 
