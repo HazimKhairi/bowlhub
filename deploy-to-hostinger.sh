@@ -100,6 +100,14 @@ cp -r "$PROJECT_DIR/public/"* "$DEPLOY_DIR/"
 # Copy production .env
 cp "$PROJECT_DIR/.env.production" "$DEPLOY_DIR/.env"
 
+# Copy deployment script for Hostinger
+if [ -f "$PROJECT_DIR/deploy.sh" ]; then
+    cp "$PROJECT_DIR/deploy.sh" "$DEPLOY_DIR/"
+    echo -e "${GREEN}✓ Deployment script included${NC}"
+else
+    echo -e "${RED}✗ Warning: deploy.sh not found in project root${NC}"
+fi
+
 # Create placeholder vendor directory
 mkdir -p "$DEPLOY_DIR/vendor"
 
@@ -138,7 +146,43 @@ echo -e "${GREEN}✓ index.php fixed for Hostinger structure${NC}"
 echo ""
 
 #################################################
-# PHASE 5: Fix Storage Symlink Structure
+# PHASE 5: Create .htaccess for Hostinger
+#################################################
+echo -e "${YELLOW}[5/9] Creating .htaccess for Hostinger...${NC}"
+
+cat > "$DEPLOY_DIR/.htaccess" << 'EOF'
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+EOF
+
+echo -e "${GREEN}✓ .htaccess created for Hostinger${NC}"
+echo ""
+
+#################################################
+# PHASE 6: Fix Storage Symlink Structure
 #################################################
 echo -e "${YELLOW}[5/8] Setting up storage structure for Hostinger...${NC}"
 
@@ -156,9 +200,9 @@ echo -e "${GREEN}✓ Storage structure prepared${NC}"
 echo ""
 
 #################################################
-# PHASE 6: Create Deployment Instructions
+# PHASE 7: Create Deployment Instructions
 #################################################
-echo -e "${YELLOW}[6/8] Creating deployment instructions...${NC}"
+echo -e "${YELLOW}[7/9] Creating deployment instructions...${NC}"
 
 cat > "$DEPLOY_DIR/DEPLOY_INSTRUCTIONS.txt" << 'EOF'
 HOSTINGER DEPLOYMENT INSTRUCTIONS
@@ -221,9 +265,9 @@ echo -e "${GREEN}✓ Deployment instructions created${NC}"
 echo ""
 
 #################################################
-# PHASE 7: Create ZIP Package
+# PHASE 8: Create ZIP Package
 #################################################
-echo -e "${YELLOW}[7/8] Creating deployment ZIP package...${NC}"
+echo -e "${YELLOW}[8/9] Creating deployment ZIP package...${NC}"
 
 cd "$DEPLOY_DIR"
 zip -r "$ZIP_FILE" . -q
@@ -240,9 +284,9 @@ echo -e "  Files: $FILE_COUNT"
 echo ""
 
 #################################################
-# PHASE 8: Generate Summary
+# PHASE 9: Generate Summary
 #################################################
-echo -e "${YELLOW}[8/8] Deployment summary...${NC}"
+echo -e "${YELLOW}[9/9] Deployment summary...${NC}"
 
 cat << EOF
 
