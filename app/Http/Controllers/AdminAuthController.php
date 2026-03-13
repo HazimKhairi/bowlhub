@@ -25,7 +25,7 @@ class AdminAuthController extends Controller
 
         if ($password === $expectedPassword) {
             session(['admin_logged_in' => true]);
-            return redirect()->route('admin')->with('success', 'Login berjaya');
+            return redirect('/admin')->with('success', 'Login berjaya');
         }
 
         return back()->with('error', 'Kata laluan salah');

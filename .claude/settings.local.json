@@ -10,7 +10,11 @@
       "Bash(ls -la /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/*.md)",
       "Bash(find /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/public/css -name \"*.css\" 2>/dev/null | head -5)",
       "Bash(find /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/public/js -name \"*.js\" 2>/dev/null | head -5)",
-      "Bash(chmod +x /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/deploy-intelligent.sh)"
+      "Bash(chmod +x /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/deploy-intelligent.sh)",
+      "Bash(php --version)",
+      "Bash(php artisan:*)",
+      "Bash(find /Users/radhifauzan/Desktop/side-projects/bowling-system-backend -name \".env*\" -type f 2>/dev/null | head -10)",
+      "Bash(git check-ignore:*)"
     ]
   }
 }

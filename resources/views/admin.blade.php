@@ -650,7 +650,7 @@ function viewReceipt(receiptPath) {
         const img = document.getElementById('receiptImage');
         const pdf = document.getElementById('receiptPdf');
         const download = document.getElementById('receiptDownload');
-        const fileUrl = '/storage/' + receiptPath;
+        const fileUrl = '/' + receiptPath;
 
         console.log('File URL:', fileUrl);
 
