@@ -21,11 +21,12 @@ class AdminAuthController extends Controller
     public function login(Request $request)
     {
         $password = $request->input('password');
-        $expectedPassword = env('ADMIN_PASSWORD');
+        $expectedPassword = config('admin.password');
 
         if ($password === $expectedPassword) {
             session(['admin_logged_in' => true]);
-            return redirect('/admin')->with('success', 'Login berjaya');
+            return redirect()->route('admin')->with('success', 'Login berjaya');
+
         }
 
         return back()->with('error', 'Kata laluan salah');

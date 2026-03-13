@@ -43,23 +43,22 @@ echo ""
 #################################################
 # PHASE 1.5: Restore Storage from Backup
 #################################################
-echo -e "${YELLOW}[1.5/9] Restoring storage files from backup...${NC}"
+echo -e "${YELLOW}[1.5/9] Restoring storage from backup...${NC}"
 
-# List available backups and let user choose
 echo ""
-echo -e "${BLUE}Available backups with storage:${NC}"
+echo -e "${BLUE}Available storage backups:${NC}"
 echo ""
 
 BACKUP_OPTIONS=()
 COUNTER=0
 
-# Check each backup for storage files
-for backup in public_html_backup public_html_backup1 public_html_backup2 public_html_backup3; do
-    if [ -d "../$backup/storage" ] && [ -d "../$backup/storage/app/public/receipts" ] && [ -d "../$backup/storage/app/public/receipts/" ] && [ "$(ls -A ../$backup/storage/app/public/receipts/)" ]; then
-        FILE_COUNT=$(ls -1 ../$backup/storage/app/public/receipts/ 2>/dev/null | wc -l)
-        BACKUP_OPTIONS+=("$backup ($FILE_COUNT files)")
+# Find all directories matching public_html_v*
+for backup in ../public_html_v*; do
+    if [ -d "$backup" ] && [ -d "$backup/storage" ]; then
+        BACKUP_NAME=$(basename "$backup")
+        BACKUP_OPTIONS+=("$backup")
         COUNTER=$((COUNTER + 1))
-        echo -e "  [$COUNTER] $backup ($FILE_COUNT files)"
+        echo -e "  [$COUNTER] $BACKUP_NAME"
     fi
 done
 
@@ -67,13 +66,26 @@ echo ""
 
 # If no backups found
 if [ $COUNTER -eq 0 ]; then
-    echo -e "${YELLOW}⚠ No backup storage found, starting fresh${NC}"
+    echo -e "${YELLOW}⚠ No storage backups found (public_html_v*), skipping${NC}"
 elif [ $COUNTER -eq 1 ]; then
     # Only one backup available, use it automatically
-    BACKUP_TO_USE="${BACKUP_OPTIONS[0]%% *}"
-    BACKUP_PATH="../$BACKUP_TO_USE/storage/app/public/receipts/"
-    cp -r $BACKUP_PATH* storage/app/public/receipts/ 2>/dev/null
-    echo -e "${GREEN}✓ Automatically restored from $BACKUP_TO_USE${NC}"
+    BACKUP_TO_USE="${BACKUP_OPTIONS[0]}"
+    BACKUP_NAME=$(basename "$BACKUP_TO_USE")
+
+    # Step 1: Remove receipts inside storage
+    if [ -d "storage/receipts" ]; then
+        rm -rf storage/receipts
+        echo -e "${GREEN}✓ Removed storage/receipts${NC}"
+    fi
+
+    # Step 2: Copy storage from backup
+    cp -r "$BACKUP_TO_USE/storage/"* storage/ 2>/dev/null
+    echo -e "${GREEN}✓ Copied storage from $BACKUP_NAME${NC}"
+
+    # Step 3: Clear caches
+    php artisan view:clear && echo -e "${GREEN}✓ View cache cleared${NC}"
+    php artisan cache:clear && echo -e "${GREEN}✓ Application cache cleared${NC}"
+    php artisan config:clear && echo -e "${GREEN}✓ Config cache cleared${NC}"
 else
     # Multiple backups available, prompt user
     echo -e "${YELLOW}Which backup do you want to restore storage from?${NC}"
@@ -81,16 +93,27 @@ else
     read -r CHOICE
 
     if [ -n "$CHOICE" ] && [ "$CHOICE" -ge 1 ] && [ "$CHOICE" -le $COUNTER ]; then
-        BACKUP_TO_USE="${BACKUP_OPTIONS[$CHOICE-1]%% *}"
-        BACKUP_PATH="../$BACKUP_TO_USE/storage/app/public/receipts/"
-        cp -r $BACKUP_PATH* storage/app/public/receipts/ 2>/dev/null
-        echo -e "${GREEN}✓ Storage files restored from $BACKUP_TO_USE${NC}"
+        BACKUP_TO_USE="${BACKUP_OPTIONS[$CHOICE-1]}"
+        BACKUP_NAME=$(basename "$BACKUP_TO_USE")
+
+        # Step 1: Remove receipts inside storage
+        if [ -d "storage/receipts" ]; then
+            rm -rf storage/receipts
+            echo -e "${GREEN}✓ Removed storage/receipts${NC}"
+        fi
+
+        # Step 2: Copy storage from backup
+        cp -r "$BACKUP_TO_USE/storage/"* storage/ 2>/dev/null
+        echo -e "${GREEN}✓ Copied storage from $BACKUP_NAME${NC}"
+
+        # Step 3: Clear caches
+        php artisan view:clear && echo -e "${GREEN}✓ View cache cleared${NC}"
+        php artisan cache:clear && echo -e "${GREEN}✓ Application cache cleared${NC}"
+        php artisan config:clear && echo -e "${GREEN}✓ Config cache cleared${NC}"
     else
         echo -e "${YELLOW}⚠ Skipped storage restore${NC}"
     fi
 fi
-
-echo ""
 
 echo ""
 
@@ -104,42 +127,9 @@ composer install --no-dev --optimize-autoloader && echo -e "${GREEN}✓ Dependen
 echo ""
 
 #################################################
-# PHASE 3: Create Storage Directories
+# PHASE 3: Set Permissions
 #################################################
-echo -e "${YELLOW}[4/9] Creating storage directories...${NC}"
-
-mkdir -p storage/app/public/receipts && echo -e "${GREEN}✓ Receipts directory created${NC}"
-mkdir -p storage/framework/cache && echo -e "${GREEN}✓ Framework cache directory created${NC}"
-mkdir -p storage/framework/sessions && echo -e "${GREEN}✓ Sessions directory created${NC}"
-mkdir -p storage/framework/views && echo -e "${GREEN}✓ Views directory created${NC}"
-mkdir -p storage/logs && echo -e "${GREEN}✓ Logs directory created${NC}"
-
-echo ""
-
-#################################################
-# PHASE 4: Setup Storage Symlink
-#################################################
-echo -e "${YELLOW}[5/9] Setting up storage symlink...${NC}"
-
-cd storage
-
-# Remove existing symlink if it exists
-if [ -L "receipts" ]; then
-    rm -f receipts
-    echo -e "${GREEN}✓ Removed old symlink${NC}"
-fi
-
-# Create new symlink
-ln -s app/public/receipts receipts && echo -e "${GREEN}✓ Storage symlink created${NC}" || echo -e "${RED}✗ Failed to create symlink${NC}"
-
-cd ..
-
-echo ""
-
-#################################################
-# PHASE 5: Set Permissions
-#################################################
-echo -e "${YELLOW}[6/9] Setting permissions...${NC}"
+echo -e "${YELLOW}[4/6] Setting permissions...${NC}"
 
 chmod -R 775 storage bootstrap/cache && echo -e "${GREEN}✓ Storage permissions set${NC}" || echo -e "${RED}✗ Failed to set permissions${NC}"
 chmod +x artisan && echo -e "${GREEN}✓ Artisan made executable${NC}" || echo -e "${RED}✗ Failed to make artisan executable${NC}"
@@ -147,18 +137,18 @@ chmod +x artisan && echo -e "${GREEN}✓ Artisan made executable${NC}" || echo -
 echo ""
 
 #################################################
-# PHASE 6: Run Database Migrations
+# PHASE 4: Run Database Migrations
 #################################################
-echo -e "${YELLOW}[7/9] Running database migrations...${NC}"
+echo -e "${YELLOW}[5/6] Running database migrations...${NC}"
 
 php artisan migrate --force && echo -e "${GREEN}✓ Migrations completed${NC}" || echo -e "${RED}✗ Migrations failed${NC}"
 
 echo ""
 
 #################################################
-# PHASE 7: Clear All Caches
+# PHASE 5: Clear All Caches
 #################################################
-echo -e "${YELLOW}[8/9] Clearing all caches...${NC}"
+echo -e "${YELLOW}[6/6] Clearing all caches...${NC}"
 
 php artisan view:clear && echo -e "${GREEN}✓ View cache cleared${NC}" || echo -e "${RED}✗ Failed to clear view cache${NC}"
 php artisan cache:clear && echo -e "${GREEN}✓ Application cache cleared${NC}" || echo -e "${RED}✗ Failed to clear cache${NC}"
@@ -168,9 +158,9 @@ php artisan route:clear && echo -e "${GREEN}✓ Route cache cleared${NC}" || ech
 echo ""
 
 #################################################
-# PHASE 8: Optimize Laravel
+# PHASE 6: Optimize Laravel
 #################################################
-echo -e "${YELLOW}[9/9] Optimizing Laravel...${NC}"
+echo -e "${YELLOW}[6/6] Optimizing Laravel...${NC}"
 
 php artisan config:cache && echo -e "${GREEN}✓ Config cached${NC}" || echo -e "${RED}✗ Failed to cache config${NC}"
 php artisan route:cache && echo -e "${GREEN}✓ Routes cached${NC}" || echo -e "${RED}✗ Failed to cache routes${NC}"
