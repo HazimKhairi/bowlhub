@@ -397,6 +397,7 @@ function initAdminPanel() {
 
     showImportModal.addEventListener('click', () => {
         importModal.classList.add('active');
+        document.getElementById('importErrors').innerHTML = '';
     });
 
     closeImportModal.addEventListener('click', () => {

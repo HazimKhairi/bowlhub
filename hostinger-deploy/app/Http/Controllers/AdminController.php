@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\IndividualImport;
+use App\Imports\TeamBereguImport;
+use App\Imports\TeamBerkumpulanImport;
+use App\Imports\TeamTrioImport;
 use App\Models\Participant;
 use App\Models\Score;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AdminController extends Controller
 {
@@ -151,6 +157,91 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Ralat meluluskan peserta',
+            ]);
+        }
+    }
+
+    /**
+     * Download Excel template for import.
+     */
+    public function downloadTemplate(string $type)
+    {
+        $allowedTypes = ['individual', 'team-beregu', 'team-trio', 'team-berkumpulan'];
+
+        if (! in_array($type, $allowedTypes)) {
+            abort(404, 'Jenis template tidak sah');
+        }
+
+        $fileName = str_replace('team-', '', $type).'.xlsx';
+        $filePath = storage_path('app/public/templates/'.$fileName);
+
+        if (! file_exists($filePath)) {
+            abort(404, 'Template tidak dijumpai');
+        }
+
+        return Response::download($filePath, $fileName);
+    }
+
+    /**
+     * Import Excel file.
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:5120',
+            'type' => 'required|in:individual,team-beregu,team-trio,team-berkumpulan',
+        ]);
+
+        try {
+            $type = $request->input('type');
+            $importClass = match ($type) {
+                'individual' => IndividualImport::class,
+                'team-beregu' => TeamBereguImport::class,
+                'team-trio' => TeamTrioImport::class,
+                'team-berkumpulan' => TeamBerkumpulanImport::class,
+            };
+
+            $import = new $importClass;
+            Excel::import($import, $request->file('file'));
+
+            if ($import->hasErrors()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import gagal. Sila semak ralat di bawah.',
+                    'errors' => $import->getErrors(),
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Import berjaya!',
+            ]);
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errors = [];
+
+            foreach ($failures as $failure) {
+                $row = $failure->row(); // 1-based row number
+                $attribute = $failure->attribute();
+                $errors[] = "Baris {$row}: {$failure->errors()[0]} (Column: {$attribute})";
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal. Sila semak ralat di bawah.',
+                'errors' => $errors,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Excel import error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ralat berlaku semasa import: '.$e->getMessage(),
             ]);
         }
     }
