@@ -117,7 +117,7 @@
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Simpan</button>
-                    <button type="button" class="btn btn-danger" id="deleteParticipant">Padam</button>
+                    <button type="button" class="btn btn-danger" id="modalDeleteParticipant">Padam</button>
                 </div>
             </form>
         </div>
@@ -358,8 +358,8 @@ function initAdminPanel() {
         saveScore();
     });
 
-    // Delete participant
-    document.getElementById('deleteParticipant').addEventListener('click', () => {
+    // Delete participant (from modal)
+    document.getElementById('modalDeleteParticipant').addEventListener('click', () => {
         const participantId = document.getElementById('editParticipantId').value;
         if (confirm('Adakah anda pasti mahu memadam peserta ini?')) {
             deleteParticipant(participantId);
@@ -549,7 +549,7 @@ function renderAdminParticipantsList(participants) {
             <button class="btn btn-sm ${participantHasScores ? 'btn-secondary' : 'btn-primary'}" onclick="openScoreModal('${p.id}', ${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 <i class="fas fa-${participantHasScores ? 'edit' : 'plus'}"></i> ${participantHasScores ? 'Kemaskini' : 'Masukkan Skor'}
             </button>
-            <button class="btn btn-sm btn-danger" ${participantHasScores ? 'disabled' : ''} onclick="deleteParticipant('${p.id}')"><i class="fas fa-trash"></i> Padam</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteParticipant('${p.id}')"><i class="fas fa-trash"></i> Padam</button>
         `;
 
         return `
