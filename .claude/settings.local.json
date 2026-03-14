@@ -31,7 +31,9 @@
       "Bash(php test_template.php)",
       "Bash(php -r \"\n\\\\$reader = new PhpOffice\\\\PhpSpreadsheet\\\\IOFactory::load\\('storage/app/public/templates/individual.xlsx'\\);\necho 'Headers: ' . implode\\(', ', \\\\$reader->getActiveSheet\\(\\)->rangeToArray\\('A1:A1', null, true, false, false\\)[0]\\) . PHP_EOL;\necho 'Total rows: ' . count\\(\\\\$reader->getActiveSheet\\(\\)->toArray\\(\\)\\) . PHP_EOL;\n\")",
       "Bash(unzip -l /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/storage/app/public/templates/individual.xlsx 2>/dev/null | head -20)",
-      "Bash(unzip -p /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/storage/app/public/templates/individual.xlsx xl/worksheets/sheet1.xml 2>/dev/null | head -50)"
+      "Bash(unzip -p /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/storage/app/public/templates/individual.xlsx xl/worksheets/sheet1.xml 2>/dev/null | head -50)",
+      "Bash(sqlite3 /Users/radhifauzan/Desktop/side-projects/bowling-system-backend/database/database.sqlite \".schema\")",
+      "Bash(php -r \"require 'vendor/autoload.php'; \\\\$app = require 'bootstrap/app.php'; \\\\$kernel = \\\\$app->make\\(Illuminate\\\\Contracts\\\\Http\\\\Kernel::class\\); \\\\$middleware = new ReflectionClass\\(\\\\$kernel\\); print_r\\(\\\\$middleware->getConstants\\(\\)\\);\" 2>/dev/null || echo \"Cannot inspect kernel directly\")"
     ]
   }
 }
