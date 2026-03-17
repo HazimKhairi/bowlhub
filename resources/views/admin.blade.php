@@ -290,6 +290,11 @@
     border: 1px solid #c3e6cb;
     border-radius: 4px;
     color: #155724;
+    display: none;
+}
+
+.import-results.show {
+    display: block;
 }
 
 .import-results.partial {
@@ -481,26 +486,33 @@ function initAdminPanel() {
 
             if (result.success) {
                 // Display results
-                let resultsHtml = '';
+                const resultsDiv = document.getElementById('importResults');
+
                 if (result.results) {
-                    const summaryClass = (result.errors && result.errors.length > 0) ? 'import-results partial' : 'import-results';
-                    resultsHtml = `
-                        <div class="${summaryClass}">
-                            <div class="result-summary">
-                                <div class="result-item">
-                                    <div class="result-count">${result.results.created}</div>
-                                    <div class="result-label">Baharu</div>
-                                </div>
-                                <div class="result-item">
-                                    <div class="result-count">${result.results.updated}</div>
-                                    <div class="result-label">Dikemaskini</div>
-                                </div>
+                    // Set CSS class based on whether there are errors
+                    if (result.errors && result.errors.length > 0) {
+                        resultsDiv.classList.add('partial');
+                    } else {
+                        resultsDiv.classList.remove('partial');
+                    }
+
+                    resultsDiv.innerHTML = `
+                        <div class="result-summary">
+                            <div class="result-item">
+                                <div class="result-count">${result.results.created}</div>
+                                <div class="result-label">Baharu</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-count">${result.results.updated}</div>
+                                <div class="result-label">Dikemaskini</div>
                             </div>
                         </div>
                     `;
+                    resultsDiv.classList.add('show');
+                } else {
+                    resultsDiv.innerHTML = '';
+                    resultsDiv.classList.remove('show');
                 }
-
-                document.getElementById('importResults').innerHTML = resultsHtml;
 
                 // Show errors if any
                 if (result.errors && result.errors.length > 0) {
@@ -537,6 +549,7 @@ function initAdminPanel() {
         document.getElementById('importForm').reset();
         document.getElementById('importErrors').innerHTML = '';
         document.getElementById('importResults').innerHTML = '';
+        document.getElementById('importResults').classList.remove('show');
         document.getElementById('closeImportResults').style.display = 'none';
         document.getElementById('submitImport').style.display = 'inline-block';
         document.getElementById('cancelImport').style.display = 'inline-block';

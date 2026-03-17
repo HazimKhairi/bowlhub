@@ -41,7 +41,8 @@
       "Bash(vendor/bin/pint app/Http/Controllers/AdminController.php)",
       "Bash(php -l app/Imports/ParticipantImport.php && php -l app/Http/Controllers/AdminController.php)",
       "Bash(cat > storage/app/public/templates/.gitignore << 'EOF'\n!.gitignore\n!*.xlsx\n~$*\nEOF)",
-      "Bash(for f:*)"
+      "Bash(for f:*)",
+      "Bash(vendor/bin/pint app/Imports/ParticipantImport.php)"
     ]
   }
 }

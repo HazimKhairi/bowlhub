@@ -237,6 +237,27 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
                 $participant = new Participant;
                 $participant->id = \Str::uuid();
                 $participant->ic = $ic;
+            } else {
+                // Prevent switching from team event to individual (must delete manually first)
+                $currentEventType = $participant->event_type;
+                $newEventType = $this->getEventType();
+                $teamEventTypes = ['beregu', 'trio', 'berkumpulan'];
+
+                if (in_array($currentEventType, $teamEventTypes) && $newEventType === 'individu') {
+                    $participantTeamCount = $participant->teamMembers()->count();
+
+                    if ($participantTeamCount > 0) {
+                        throw new \Exception(
+                            "Peserta dengan IC '{$ic}' sudah berdaftar dalam acara '{$currentEventType}' dengan {$participantTeamCount} ahli pasukan. ".
+                            'Sila padam rekod peserta tersebut dahulu sebelum mengimport sebagai individu.'
+                        );
+                    }
+                }
+
+                // Warn if changing between team events (allowed but warn admin)
+                if ($currentEventType !== $newEventType && in_array($currentEventType, $teamEventTypes) && in_array($newEventType, $teamEventTypes)) {
+                    $this->errors[] = "Amaran: Peserta dengan IC '{$ic}' bertukar acara dari '{$currentEventType}' ke '{$newEventType}'";
+                }
             }
 
             $participant->name = $name;
