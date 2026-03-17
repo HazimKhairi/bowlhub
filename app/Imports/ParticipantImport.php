@@ -16,7 +16,9 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
 {
     protected array $errors = [];
 
-    protected array $duplicateIcs = [];
+    protected array $created = [];
+
+    protected array $updated = [];
 
     protected int $rowNumber = 2; // Excel row number (1-based, header is row 1)
 
@@ -33,6 +35,7 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
         if (preg_match('/^(\d+)\.(\d+)E\+(\d+)$/', $value, $matches)) {
             $base = $matches[1].$matches[2];
             $exponent = (int) $matches[3];
+
             return str_pad($base, $exponent + 1, '0');
         }
 
@@ -130,30 +133,22 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
             return;
         }
 
-        // Second pass: Check for duplicate ICs in database
-        $existingIcs = Participant::whereIn('ic', array_keys($captainIcs))
-            ->pluck('ic', 'ic')
-            ->toArray();
+        // Third pass: Import data with error handling per row
+        $this->rowNumber = 2;
 
-        if (! empty($existingIcs)) {
-            $this->errors[] = 'No. KP berikut telah berdaftar dalam sistem: '.implode(', ', array_keys($existingIcs));
-
-            return;
-        }
-
-        // Third pass: Import data within a transaction
-        DB::beginTransaction();
-
-        try {
-            $this->importData($allRows);
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Excel import error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw $e;
+        foreach ($allRows as $row) {
+            try {
+                $this->importRow($row);
+                $this->rowNumber++;
+            } catch (\Exception $e) {
+                Log::error('Excel import row error', [
+                    'row' => $this->rowNumber,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                $this->errors[] = "Baris {$this->rowNumber}: {$e->getMessage()}";
+                $this->rowNumber++;
+            }
         }
     }
 
@@ -175,6 +170,7 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
         if (preg_match('/^(\d+)\.(\d+)E\+(\d+)$/', $ic, $matches)) {
             $base = $matches[1].$matches[2];
             $exponent = (int) $matches[3];
+
             return str_pad($base, $exponent + 1, '0');
         }
 
@@ -217,11 +213,11 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
     abstract protected function getTeamMembers(array $row): array;
 
     /**
-     * Import the data.
+     * Import a single row with result tracking.
      */
-    protected function importData(array $rows)
+    protected function importRow(array $row)
     {
-        foreach ($rows as $row) {
+        DB::transaction(function () use ($row) {
             $captainIc = $this->getCaptainIc($row);
             $captainName = $this->getCaptainName($row);
             $captainPhone = $this->getCaptainPhone($row);
@@ -235,6 +231,7 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
 
             // Find or create participant
             $participant = Participant::where('ic', $ic)->first();
+            $wasExisting = $participant !== null;
 
             if (! $participant) {
                 $participant = new Participant;
@@ -249,6 +246,13 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
             $participant->event_type = $this->getEventType();
             $participant->status = 'approved'; // Auto-approve all imported participants
             $participant->save();
+
+            // Track result
+            if ($wasExisting) {
+                $this->updated[] = $ic;
+            } else {
+                $this->created[] = $ic;
+            }
 
             // Create or update score
             $score = Score::where('participant_id', $participant->id)->first();
@@ -283,7 +287,7 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
                 $teamMember->ic = $memberData['ic'] ?? '';
                 $teamMember->save();
             }
-        }
+        });
     }
 
     /**
@@ -300,6 +304,19 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
     public function hasErrors(): bool
     {
         return ! empty($this->errors);
+    }
+
+    /**
+     * Get the import results.
+     */
+    public function getResults(): array
+    {
+        return [
+            'created' => count($this->created),
+            'updated' => count($this->updated),
+            'created_ics' => $this->created,
+            'updated_ics' => $this->updated,
+        ];
     }
 
     /**

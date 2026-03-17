@@ -187,9 +187,11 @@
                     </select>
                 </div>
                 <div id="importErrors" class="error-messages"></div>
+                <div id="importResults" class="import-results"></div>
             </form>
         </div>
         <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="closeImportResults" style="display: none;">Tutup</button>
             <button type="button" class="btn btn-secondary" id="cancelImport">Batal</button>
             <button type="submit" class="btn btn-primary" id="submitImport">
                 <i class="fas fa-upload"></i> Import
@@ -279,6 +281,41 @@
 
 .modal-footer .btn-secondary:hover {
     background-color: var(--text-dark);
+}
+
+.import-results {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+    color: #155724;
+}
+
+.import-results.partial {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.result-summary {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.result-item {
+    flex: 1;
+    text-align: center;
+}
+
+.result-count {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.result-label {
+    font-size: 0.875rem;
 }
 </style>
 @endpush
@@ -398,6 +435,10 @@ function initAdminPanel() {
     showImportModal.addEventListener('click', () => {
         importModal.classList.add('active');
         document.getElementById('importErrors').innerHTML = '';
+        document.getElementById('importResults').innerHTML = '';
+        document.getElementById('closeImportResults').style.display = 'none';
+        document.getElementById('submitImport').style.display = 'inline-block';
+        document.getElementById('cancelImport').style.display = 'inline-block';
     });
 
     closeImportModal.addEventListener('click', () => {
@@ -439,11 +480,43 @@ function initAdminPanel() {
             const result = await response.json();
 
             if (result.success) {
-                alert(result.message);
-                importModal.classList.remove('active');
-                document.getElementById('importForm').reset();
-                document.getElementById('importErrors').innerHTML = '';
-                loadParticipants(); // Reload participant list
+                // Display results
+                let resultsHtml = '';
+                if (result.results) {
+                    const summaryClass = (result.errors && result.errors.length > 0) ? 'import-results partial' : 'import-results';
+                    resultsHtml = `
+                        <div class="${summaryClass}">
+                            <div class="result-summary">
+                                <div class="result-item">
+                                    <div class="result-count">${result.results.created}</div>
+                                    <div class="result-label">Baharu</div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="result-count">${result.results.updated}</div>
+                                    <div class="result-label">Dikemaskini</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('importResults').innerHTML = resultsHtml;
+
+                // Show errors if any
+                if (result.errors && result.errors.length > 0) {
+                    let errorsHtml = result.errors.map(error => `<div class="error-message">${error}</div>`).join('');
+                    document.getElementById('importErrors').innerHTML = errorsHtml;
+                } else {
+                    document.getElementById('importErrors').innerHTML = '';
+                }
+
+                // Show close button and hide submit/cancel buttons
+                document.getElementById('closeImportResults').style.display = 'inline-block';
+                document.getElementById('submitImport').style.display = 'none';
+                document.getElementById('cancelImport').style.display = 'none';
+
+                // Reload participant list in background
+                loadParticipants();
             } else {
                 let errorsHtml = '';
                 if (result.errors && Array.isArray(result.errors)) {
@@ -456,6 +529,18 @@ function initAdminPanel() {
         } catch (error) {
             alert('Ralat berlaku semasa import');
         }
+    });
+
+    // Close import results handler
+    document.getElementById('closeImportResults').addEventListener('click', () => {
+        importModal.classList.remove('active');
+        document.getElementById('importForm').reset();
+        document.getElementById('importErrors').innerHTML = '';
+        document.getElementById('importResults').innerHTML = '';
+        document.getElementById('closeImportResults').style.display = 'none';
+        document.getElementById('submitImport').style.display = 'inline-block';
+        document.getElementById('cancelImport').style.display = 'inline-block';
+        loadParticipants();
     });
 }
 

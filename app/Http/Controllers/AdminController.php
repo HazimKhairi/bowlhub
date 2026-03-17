@@ -192,6 +192,8 @@ class AdminController extends Controller
             'type' => 'required|in:individual,team-beregu,team-trio,team-berkumpulan',
         ]);
 
+        $import = null;
+
         try {
             $type = $request->input('type');
             $importClass = match ($type) {
@@ -207,14 +209,29 @@ class AdminController extends Controller
             if ($import->hasErrors()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Import gagal. Sila semak ralat di bawah.',
+                    'message' => 'Import selesai dengan ralat. Sila semak ralat di bawah.',
                     'errors' => $import->getErrors(),
+                    'results' => $import->getResults(),
                 ]);
+            }
+
+            $results = $import->getResults();
+            $totalProcessed = $results['created'] + $results['updated'];
+            $errorCount = count($import->getErrors());
+
+            if ($totalProcessed > 0) {
+                $message = $errorCount > 0
+                    ? "Import selesai. {$results['created']} peserta baharu, {$results['updated']} peserta dikemaskini. {$errorCount} baris mengalami ralat."
+                    : "Import berjaya! {$results['created']} peserta baharu, {$results['updated']} peserta dikemaskini.";
+            } else {
+                $message = 'Import gagal. Tiada data sah untuk diimport.';
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Import berjaya!',
+                'message' => $message,
+                'results' => $results,
+                'errors' => $import->getErrors(),
             ]);
 
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
@@ -231,6 +248,7 @@ class AdminController extends Controller
                 'success' => false,
                 'message' => 'Validasi gagal. Sila semak ralat di bawah.',
                 'errors' => $errors,
+                'results' => $import ? $import->getResults() : ['created' => 0, 'updated' => 0, 'created_ics' => [], 'updated_ics' => []],
             ]);
 
         } catch (\Exception $e) {
