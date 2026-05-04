@@ -19,6 +19,7 @@ class Participant extends Model
     protected $fillable = [
         'id',
         'name',
+        'nickname',
         'ic',
         'phone',
         'team',

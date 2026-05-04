@@ -42,6 +42,12 @@
             </div>
 
             <div class="form-group">
+                <label for="regNickname">Nickname *</label>
+                <input type="text" id="regNickname" name="nickname" value="{{ old('nickname') }}" maxlength="100" required>
+                <small class="form-hint">Nickname unik untuk padanan skor selepas pertandingan. Cth: StrikeKing, PinHunter</small>
+            </div>
+
+            <div class="form-group">
                 <label for="regIC">No. Kad Pengenalan</label>
                 <input type="text" id="regIC" name="ic" value="{{ old('ic') }}" required>
             </div>

@@ -29,6 +29,7 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                     [
                         'no_kp' => '',
                         'nama_penuh' => 'Ahmad bin Ali',
+                        'nickname' => 'StrikeKing',
                         'no_telefon' => '0123456789',
                         'nama_pasukan' => 'Pasukan Strike',
                         'jantina' => 'lelaki',
@@ -45,6 +46,7 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                     [
                         'ketua_kp' => '',
                         'ketua_nama' => 'Ahmad bin Ali',
+                        'ketua_nickname' => 'CaptainStrike',
                         'ketua_telefon' => '0123456789',
                         'nama_pasukan' => 'Pasukan Beregu',
                         'jantina' => 'lelaki',
@@ -63,6 +65,7 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                     [
                         'ketua_kp' => '',
                         'ketua_nama' => 'Ahmad bin Ali',
+                        'ketua_nickname' => 'TrioCaptain',
                         'ketua_telefon' => '0123456789',
                         'nama_pasukan' => 'Pasukan Trio',
                         'jantina' => 'lelaki',
@@ -83,6 +86,7 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                     [
                         'ketua_kp' => '',
                         'ketua_nama' => 'Ahmad bin Ali',
+                        'ketua_nickname' => 'GroupCaptain',
                         'ketua_telefon' => '0123456789',
                         'nama_pasukan' => 'Pasukan Berkumpulan',
                         'jantina' => 'lelaki',
@@ -104,6 +108,12 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                     ],
                 ];
 
+            case 'score-import':
+                return [
+                    ['nickname' => 'StrikeKing', 'g1' => 180, 'g2' => 195, 'g3' => 210, 'g4' => 200, 'g5' => 185],
+                    ['nickname' => 'PinHunter', 'g1' => 175, 'g2' => 185, 'g3' => 190, 'g4' => 205, 'g5' => 180],
+                ];
+
             default:
                 return [];
         }
@@ -119,6 +129,7 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                 return [
                     'no_kp',
                     'nama_penuh',
+                    'nickname',
                     'no_telefon',
                     'nama_pasukan',
                     'jantina',
@@ -133,6 +144,7 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                 return [
                     'ketua_kp',
                     'ketua_nama',
+                    'ketua_nickname',
                     'ketua_telefon',
                     'nama_pasukan',
                     'jantina',
@@ -149,6 +161,7 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                 return [
                     'ketua_kp',
                     'ketua_nama',
+                    'ketua_nickname',
                     'ketua_telefon',
                     'nama_pasukan',
                     'jantina',
@@ -167,6 +180,7 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                 return [
                     'ketua_kp',
                     'ketua_nama',
+                    'ketua_nickname',
                     'ketua_telefon',
                     'nama_pasukan',
                     'jantina',
@@ -186,6 +200,9 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                     'g4',
                     'g5',
                 ];
+
+            case 'score-import':
+                return ['nickname', 'g1', 'g2', 'g3', 'g4', 'g5'];
 
             default:
                 return [];
@@ -214,6 +231,8 @@ class TemplateExport implements FromArray, WithHeadings, WithTitle
                 return 'Trio';
             case 'team-berkumpulan':
                 return 'Berkumpulan';
+            case 'score-import':
+                return 'Import Skor';
             default:
                 return 'Template';
         }

@@ -34,4 +34,11 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::post('/participant/{id}/approve', [AdminController::class, 'approveParticipant'])->name('admin.participant.approve');
     Route::get('/template/{type}', [AdminController::class, 'downloadTemplate'])->name('admin.template.download');
     Route::post('/import', [AdminController::class, 'importExcel'])->name('admin.import');
+
+    // Score import (match by nickname)
+    Route::get('/scores/import', [AdminController::class, 'scoreImportPage'])->name('admin.scores.import');
+    Route::post('/scores/import', [AdminController::class, 'importScores'])->name('admin.scores.import.submit');
+    Route::get('/scores/unmatched', [AdminController::class, 'unmatchedScores'])->name('admin.scores.unmatched');
+    Route::post('/scores/unmatched/{id}/resolve', [AdminController::class, 'resolveUnmatched'])->name('admin.scores.unmatched.resolve');
+    Route::delete('/scores/unmatched/{id}', [AdminController::class, 'discardUnmatched'])->name('admin.scores.unmatched.discard');
 });

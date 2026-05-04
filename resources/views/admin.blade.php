@@ -13,6 +13,15 @@
     <div class="admin-tabs">
         <button class="admin-tab-btn active" data-tab="scores">Urus Skor</button>
         <button class="admin-tab-btn" data-tab="participants">Senarai Peserta</button>
+        <a href="{{ route('admin.scores.import') }}" class="admin-tab-btn admin-tab-link">
+            <i class="fas fa-file-import"></i> Import Skor
+        </a>
+        <a href="{{ route('admin.scores.unmatched') }}" class="admin-tab-btn admin-tab-link">
+            <i class="fas fa-clipboard-check"></i> Belum Dipadan
+            @if(($unmatchedCount ?? 0) > 0)
+                <span class="badge-count">{{ $unmatchedCount }}</span>
+            @endif
+        </a>
     </div>
 
     <!-- Score Management Tab -->
@@ -203,6 +212,25 @@
 
 @push('styles')
 <style>
+.admin-tab-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.badge-count {
+    display: inline-block;
+    background: var(--danger-color);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    margin-left: 0.3rem;
+    line-height: 1.2;
+}
+
 .status-badge {
     padding: 0.25rem 0.75rem;
     border-radius: 12px;

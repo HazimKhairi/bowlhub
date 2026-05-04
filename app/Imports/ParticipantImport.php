@@ -51,6 +51,8 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
             'ketua_kp' => 'nullable|string',
             'nama_penuh' => 'nullable|string|max:255',
             'ketua_nama' => 'nullable|string|max:255',
+            'nickname' => 'nullable|string|max:100',
+            'ketua_nickname' => 'nullable|string|max:100',
             'no_telefon' => 'nullable|string|max:20',
             'ketua_telefon' => 'nullable|string|max:20',
             'nama_pasukan' => 'required|string|max:255',
@@ -198,6 +200,16 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
     abstract protected function getCaptainName(array $row): ?string;
 
     /**
+     * Get the captain nickname from a row.
+     */
+    protected function getCaptainNickname(array $row): ?string
+    {
+        $value = $row['ketua_nickname'] ?? $row['nickname'] ?? null;
+
+        return $value !== null && trim((string) $value) !== '' ? trim((string) $value) : null;
+    }
+
+    /**
      * Get the captain phone from a row.
      */
     abstract protected function getCaptainPhone(array $row): ?string;
@@ -261,6 +273,16 @@ abstract class ParticipantImport implements ToCollection, WithHeadingRow, WithVa
             }
 
             $participant->name = $name;
+            $nickname = $this->getCaptainNickname($row);
+            if ($nickname !== null) {
+                $existingWithNickname = Participant::where('nickname', $nickname)
+                    ->where('id', '!=', $participant->id ?? '')
+                    ->first();
+                if ($existingWithNickname) {
+                    throw new \Exception("Nickname '{$nickname}' sudah digunakan oleh peserta lain (IC: {$existingWithNickname->ic})");
+                }
+                $participant->nickname = $nickname;
+            }
             $participant->phone = $phone;
             $participant->team = $team;
             $participant->gender = $gender;

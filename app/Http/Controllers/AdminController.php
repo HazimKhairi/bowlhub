@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TemplateExport;
 use App\Imports\IndividualImport;
+use App\Imports\ScoreImport;
 use App\Imports\TeamBereguImport;
 use App\Imports\TeamBerkumpulanImport;
 use App\Imports\TeamTrioImport;
 use App\Models\Participant;
+use App\Models\PendingScoreImport;
 use App\Models\Score;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -20,7 +24,9 @@ class AdminController extends Controller
      */
     public function index(): View
     {
-        return view('admin');
+        $unmatchedCount = PendingScoreImport::pending()->count();
+
+        return view('admin', compact('unmatchedCount'));
     }
 
     /**
@@ -166,20 +172,21 @@ class AdminController extends Controller
      */
     public function downloadTemplate(string $type)
     {
-        $allowedTypes = ['individual', 'team-beregu', 'team-trio', 'team-berkumpulan'];
+        $allowedTypes = ['individual', 'team-beregu', 'team-trio', 'team-berkumpulan', 'score-import'];
 
         if (! in_array($type, $allowedTypes)) {
             abort(404, 'Jenis template tidak sah');
         }
 
-        $fileName = str_replace('team-', '', $type).'.xlsx';
-        $filePath = storage_path('app/public/templates/'.$fileName);
+        $fileName = match ($type) {
+            'team-beregu' => 'beregu.xlsx',
+            'team-trio' => 'trio.xlsx',
+            'team-berkumpulan' => 'berkumpulan.xlsx',
+            'score-import' => 'score-import.xlsx',
+            default => 'individual.xlsx',
+        };
 
-        if (! file_exists($filePath)) {
-            abort(404, 'Template tidak dijumpai');
-        }
-
-        return Response::download($filePath, $fileName);
+        return Excel::download(new TemplateExport($type), $fileName);
     }
 
     /**
@@ -262,5 +269,133 @@ class AdminController extends Controller
                 'message' => 'Ralat berlaku semasa import: '.$e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Show the score import page.
+     */
+    public function scoreImportPage(): View
+    {
+        $unmatchedCount = PendingScoreImport::pending()->count();
+
+        return view('admin.score-import', compact('unmatchedCount'));
+    }
+
+    /**
+     * Import scores by nickname matching.
+     */
+    public function importScores(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:5120',
+        ]);
+
+        try {
+            $import = new ScoreImport;
+            Excel::import($import, $request->file('file'));
+
+            $results = $import->getResults();
+            $errors = $import->getErrors();
+
+            $message = "Selesai. {$results['matched']} skor dipadan dan disimpan, ".
+                "{$results['unmatched']} memerlukan semakan manual.";
+
+            if ($results['invalid'] > 0) {
+                $message .= " {$results['invalid']} baris tidak sah.";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'results' => $results,
+                'errors' => $errors,
+            ]);
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $errors = [];
+            foreach ($e->failures() as $failure) {
+                $row = $failure->row();
+                $errors[] = "Baris {$row}: {$failure->errors()[0]} (Column: {$failure->attribute()})";
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal. Sila semak ralat di bawah.',
+                'errors' => $errors,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Score import error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ralat berlaku semasa import skor: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Show unmatched scores for manual review.
+     */
+    public function unmatchedScores(): View
+    {
+        $unmatched = PendingScoreImport::pending()
+            ->orderByDesc('created_at')
+            ->get();
+
+        $participants = Participant::orderBy('name')
+            ->get(['id', 'name', 'nickname', 'team', 'event_type']);
+
+        return view('admin.unmatched-scores', compact('unmatched', 'participants'));
+    }
+
+    /**
+     * Resolve an unmatched score by linking it to a participant.
+     */
+    public function resolveUnmatched(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'participant_id' => 'required|string|exists:participants,id',
+        ]);
+
+        $pending = PendingScoreImport::pending()->findOrFail($id);
+
+        DB::transaction(function () use ($pending, $validated) {
+            $score = Score::firstOrNew(['participant_id' => $validated['participant_id']]);
+            $score->g1 = $pending->g1;
+            $score->g2 = $pending->g2;
+            $score->g3 = $pending->g3;
+            $score->g4 = $pending->g4;
+            $score->g5 = $pending->g5;
+            $score->save();
+
+            $pending->status = 'resolved';
+            $pending->resolved_participant_id = $validated['participant_id'];
+            $pending->resolved_at = now();
+            $pending->save();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Skor berjaya dipadankan kepada peserta.',
+        ]);
+    }
+
+    /**
+     * Discard an unmatched score record.
+     */
+    public function discardUnmatched(int $id)
+    {
+        $pending = PendingScoreImport::pending()->findOrFail($id);
+        $pending->status = 'discarded';
+        $pending->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rekod dibuang.',
+        ]);
     }
 }

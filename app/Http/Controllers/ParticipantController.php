@@ -31,6 +31,7 @@ class ParticipantController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
+                'nickname' => 'required|string|max:100|unique:participants,nickname',
                 'ic' => 'required|string|unique:participants,ic',
                 'phone' => 'required|string|max:20',
                 'team' => 'required|string|max:255',
@@ -40,6 +41,10 @@ class ParticipantController extends Controller
                 'team_members' => 'sometimes|array',
                 'team_members.*.name' => 'sometimes|string|max:255',
                 'team_members.*.ic' => 'sometimes|string',
+            ], [
+                'nickname.required' => 'Nickname diperlukan untuk padanan skor',
+                'nickname.unique' => 'Nickname ini sudah digunakan, sila pilih yang lain',
+                'nickname.max' => 'Nickname tidak boleh melebihi 100 aksara',
             ]);
 
             \Log::info('Validation passed', $validated);
@@ -69,6 +74,7 @@ class ParticipantController extends Controller
             $participant = Participant::create([
                 'id' => $participantId,
                 'name' => $validated['name'],
+                'nickname' => $validated['nickname'],
                 'ic' => $validated['ic'],
                 'phone' => $validated['phone'],
                 'team' => $validated['team'],
