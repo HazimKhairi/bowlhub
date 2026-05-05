@@ -101,6 +101,7 @@ class LeaderboardController extends Controller
                     ->sortByDesc(function ($participant) {
                         return $participant->score ? $participant->score->total : 0;
                     })
+                    ->values()
                     ->take(5);
 
                 foreach ($participants as $index => $participant) {
