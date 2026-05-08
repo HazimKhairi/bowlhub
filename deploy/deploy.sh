@@ -17,7 +17,11 @@ if [[ -d .git ]]; then
 fi
 
 echo "==> Installing Composer dependencies (production)"
-sudo -u ubuntu composer install --no-dev --optimize-autoloader --no-interaction
+# --ignore-platform-req=php: server runs PHP 8.5 but composer.lock pins
+# phpoffice/phpspreadsheet 1.30.2 (requires PHP <8.5). Existing vendor/
+# works at runtime; bypass platform check until lock is bumped to
+# phpspreadsheet 2.x + maatwebsite/excel that supports it.
+sudo -u ubuntu composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-req=php
 
 echo "==> Setting up .env"
 if [[ ! -f .env ]]; then
