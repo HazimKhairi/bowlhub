@@ -8,6 +8,9 @@
 
     <div class="admin-tabs" style="margin-bottom: 1.5rem;">
         <a href="{{ route('admin') }}" class="admin-tab-btn">Kembali ke Panel</a>
+        <a href="{{ route('admin.scores.ocr') }}" class="admin-tab-btn">
+            <i class="fas fa-camera"></i> Import dari PDF/Foto (OCR)
+        </a>
         <a href="{{ route('admin.scores.unmatched') }}" class="admin-tab-btn">
             Belum Dipadan
             @if($unmatchedCount > 0)

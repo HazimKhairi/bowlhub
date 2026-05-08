@@ -41,4 +41,9 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::get('/scores/unmatched', [AdminController::class, 'unmatchedScores'])->name('admin.scores.unmatched');
     Route::post('/scores/unmatched/{id}/resolve', [AdminController::class, 'resolveUnmatched'])->name('admin.scores.unmatched.resolve');
     Route::delete('/scores/unmatched/{id}', [AdminController::class, 'discardUnmatched'])->name('admin.scores.unmatched.discard');
+
+    // OCR-based score import (PDF/image)
+    Route::get('/scores/ocr', [AdminController::class, 'ocrUploadForm'])->name('admin.scores.ocr');
+    Route::post('/scores/ocr', [AdminController::class, 'ocrPreview'])->name('admin.scores.ocr.preview');
+    Route::post('/scores/ocr/confirm', [AdminController::class, 'ocrConfirm'])->name('admin.scores.ocr.confirm');
 });

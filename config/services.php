@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'gemini' => [
+        'keys' => array_values(array_filter([
+            env('GEMINI_API_KEY'),
+            env('GEMINI_API_KEY2'),
+            env('GEMINI_API_KEY3'),
+        ])),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        'timeout' => env('GEMINI_TIMEOUT', 60),
+    ],
+
 ];

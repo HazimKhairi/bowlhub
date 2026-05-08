@@ -11,9 +11,12 @@ use App\Imports\TeamTrioImport;
 use App\Models\Participant;
 use App\Models\PendingScoreImport;
 use App\Models\Score;
+use App\Services\GeminiOcrService;
+use App\Services\ScoreOcrService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -396,6 +399,109 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Rekod dibuang.',
+        ]);
+    }
+
+    /**
+     * Show the OCR upload form.
+     */
+    public function ocrUploadForm(): View
+    {
+        return view('admin.score-ocr');
+    }
+
+    /**
+     * Process uploaded PDF/image with Gemini Vision API. Falls back to Tesseract if Gemini unavailable.
+     */
+    public function ocrPreview(Request $request, GeminiOcrService $gemini, ScoreOcrService $tesseract)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+        ]);
+
+        $upload = $request->file('file');
+        $tmpPath = $upload->getRealPath();
+        $hintExt = strtolower($upload->getClientOriginalExtension() ?: 'pdf');
+        $engine = 'gemini';
+
+        try {
+            $result = $gemini->process($tmpPath, $hintExt);
+        } catch (\Throwable $e) {
+            \Log::warning('Gemini OCR failed, falling back to Tesseract', ['error' => $e->getMessage()]);
+            $engine = 'tesseract (fallback)';
+            try {
+                $result = $tesseract->process($tmpPath, $hintExt);
+            } catch (\Throwable $e2) {
+                \Log::error('Both OCR engines failed', ['gemini' => $e->getMessage(), 'tesseract' => $e2->getMessage()]);
+
+                return back()->with('error', 'OCR gagal: '.$e2->getMessage());
+            }
+        }
+
+        return view('admin.score-ocr-preview', [
+            'rawText' => $result['raw_text'],
+            'pages' => $result['pages'],
+            'parsed' => $result['parsed'],
+            'engine' => $engine,
+        ]);
+    }
+
+    /**
+     * Confirm OCR-extracted scores: auto-match by nickname, send unmatched to pending.
+     */
+    public function ocrConfirm(Request $request)
+    {
+        $validated = $request->validate([
+            'rows' => 'required|array',
+            'rows.*.nickname' => 'required|string|max:100',
+            'rows.*.g1' => 'required|integer|min:0|max:300',
+            'rows.*.g2' => 'required|integer|min:0|max:300',
+            'rows.*.g3' => 'required|integer|min:0|max:300',
+            'rows.*.g4' => 'required|integer|min:0|max:300',
+            'rows.*.g5' => 'required|integer|min:0|max:300',
+        ]);
+
+        $batchId = (string) Str::uuid();
+        $matched = 0;
+        $unmatched = 0;
+        $errors = [];
+
+        foreach ($validated['rows'] as $idx => $row) {
+            $nickname = trim($row['nickname']);
+
+            $participant = Participant::where('nickname', $nickname)->first();
+
+            if ($participant) {
+                $score = Score::firstOrNew(['participant_id' => $participant->id]);
+                $score->g1 = $row['g1'];
+                $score->g2 = $row['g2'];
+                $score->g3 = $row['g3'];
+                $score->g4 = $row['g4'];
+                $score->g5 = $row['g5'];
+                $score->save();
+                $matched++;
+            } else {
+                PendingScoreImport::create([
+                    'batch_id' => $batchId,
+                    'nickname' => $nickname,
+                    'g1' => $row['g1'],
+                    'g2' => $row['g2'],
+                    'g3' => $row['g3'],
+                    'g4' => $row['g4'],
+                    'g5' => $row['g5'],
+                    'reason' => 'no_match',
+                    'status' => 'pending',
+                    'row_number' => $idx + 1,
+                ]);
+                $unmatched++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "OCR import selesai: {$matched} skor dipadan, {$unmatched} memerlukan semakan manual.",
+            'matched' => $matched,
+            'unmatched' => $unmatched,
         ]);
     }
 }
