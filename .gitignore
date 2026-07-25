@@ -26,3 +26,4 @@ Thumbs.db
 # SSH keys
 *.pem
 *.key
+deploy/backup-before-decommission-*/
